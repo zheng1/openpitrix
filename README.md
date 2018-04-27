@@ -7,6 +7,7 @@
 [![Go Report Card](https://goreportcard.com/badge/openpitrix.io/openpitrix)](https://goreportcard.com/report/openpitrix.io/openpitrix)
 [![GoDoc](https://godoc.org/openpitrix.io/openpitrix?status.svg)](https://godoc.org/openpitrix.io/openpitrix)
 [![License](http://img.shields.io/badge/license-apache%20v2-blue.svg)](https://github.com/openpitrix/openpitrix/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzheng1%2Fopenpitrix.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzheng1%2Fopenpitrix?ref=badge_shield)
 
 ----
 
@@ -27,3 +28,7 @@ Basic idea is to decouple application repository and runtime environment. The ru
 All [members](docs/members.md) of the OpenPitrix community must abide by the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md). Only by respecting each other can we develop a productive, collaborative community.
 
 You can then check out how to [setup for development](docs/development.md).
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzheng1%2Fopenpitrix.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzheng1%2Fopenpitrix?ref=badge_large)
