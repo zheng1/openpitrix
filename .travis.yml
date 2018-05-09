@@ -1,8 +1,5 @@
 sudo: required
 
-services:
-  - docker
-
 language: go
 
 go:
@@ -11,22 +8,15 @@ go:
 
 go_import_path: openpitrix.io/openpitrix
 
-env:
-  - DOCKER_COMPOSE_VERSION=1.20.1
-
-before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+install:
+  - sudo apt-get install -y linux-image-virtual kernel linux-image-extra-virtual
+  - curl -sSL https://get.docker.com/ | sudo sh
+  - sudo pip install docker-compose
 
 before_script:
   - docker --version
   - docker-compose version
 
-jobs:
-  include:
-    - stage: fmt-check
-      script: make fmt-check
-    - stage: ci-test
-      script: make ci-test
+script:
+    - make fmt-check
+    - make ci-test
