@@ -9,7 +9,6 @@ go:
 go_import_path: openpitrix.io/openpitrix
 
 install:
-  - sudo apt-get install -y linux-image-virtual kernel linux-image-extra-virtual
   - curl -sSL https://get.docker.com/ | sudo sh
   - sudo pip install docker-compose
 
