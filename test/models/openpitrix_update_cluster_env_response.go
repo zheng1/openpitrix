@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -25,11 +24,6 @@ type OpenpitrixUpdateClusterEnvResponse struct {
 
 // Validate validates this openpitrix update cluster env response
 func (m *OpenpitrixUpdateClusterEnvResponse) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
 	return nil
 }
 

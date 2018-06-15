@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -28,25 +27,6 @@ type OpenpitrixUpgradeClusterRequest struct {
 
 // Validate validates this openpitrix upgrade cluster request
 func (m *OpenpitrixUpgradeClusterRequest) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateAdvancedParam(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixUpgradeClusterRequest) validateAdvancedParam(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AdvancedParam) { // not required
-		return nil
-	}
-
 	return nil
 }
 

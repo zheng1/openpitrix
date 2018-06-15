@@ -33,28 +33,13 @@ type OpenpitrixAddClusterNodesRequest struct {
 func (m *OpenpitrixAddClusterNodesRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAdvancedParam(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateNodeCount(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *OpenpitrixAddClusterNodesRequest) validateAdvancedParam(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AdvancedParam) { // not required
-		return nil
-	}
-
 	return nil
 }
 
@@ -65,7 +50,6 @@ func (m *OpenpitrixAddClusterNodesRequest) validateNodeCount(formats strfmt.Regi
 	}
 
 	if m.NodeCount != nil {
-
 		if err := m.NodeCount.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("node_count")

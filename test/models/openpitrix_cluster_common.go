@@ -100,7 +100,6 @@ func (m *OpenpitrixClusterCommon) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateServerIDUpperBound(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -117,7 +116,6 @@ func (m *OpenpitrixClusterCommon) validateServerIDUpperBound(formats strfmt.Regi
 	}
 
 	if m.ServerIDUpperBound != nil {
-
 		if err := m.ServerIDUpperBound.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("server_id_upper_bound")

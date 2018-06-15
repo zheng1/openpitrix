@@ -6,10 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixRuntime openpitrix runtime
@@ -17,13 +20,14 @@ import (
 type OpenpitrixRuntime struct {
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description
 	Description string `json:"description,omitempty"`
 
 	// labels
-	Labels OpenpitrixRuntimeLabels `json:"labels"`
+	Labels []*OpenpitrixRuntimeLabel `json:"labels"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -47,6 +51,7 @@ type OpenpitrixRuntime struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// zone
@@ -57,9 +62,72 @@ type OpenpitrixRuntime struct {
 func (m *OpenpitrixRuntime) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateLabels(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixRuntime) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRuntime) validateLabels(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Labels) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Labels); i++ {
+		if swag.IsZero(m.Labels[i]) { // not required
+			continue
+		}
+
+		if m.Labels[i] != nil {
+			if err := m.Labels[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("labels" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRuntime) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

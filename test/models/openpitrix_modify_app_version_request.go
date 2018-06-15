@@ -40,7 +40,6 @@ func (m *OpenpitrixModifyAppVersionRequest) Validate(formats strfmt.Registry) er
 	var res []error
 
 	if err := m.validateSequence(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -57,7 +56,6 @@ func (m *OpenpitrixModifyAppVersionRequest) validateSequence(formats strfmt.Regi
 	}
 
 	if m.Sequence != nil {
-
 		if err := m.Sequence.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("sequence")

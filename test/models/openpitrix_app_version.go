@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixAppVersion openpitrix app version
@@ -20,6 +21,7 @@ type OpenpitrixAppVersion struct {
 	AppID string `json:"app_id,omitempty"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description
@@ -41,9 +43,11 @@ type OpenpitrixAppVersion struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// update time
+	// Format: date-time
 	UpdateTime strfmt.DateTime `json:"update_time,omitempty"`
 
 	// version id
@@ -54,9 +58,60 @@ type OpenpitrixAppVersion struct {
 func (m *OpenpitrixAppVersion) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUpdateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixAppVersion) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixAppVersion) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixAppVersion) validateUpdateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.UpdateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("update_time", "body", "date-time", m.UpdateTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -22,25 +21,6 @@ type OpenpitrixDeleteReposRequest struct {
 
 // Validate validates this openpitrix delete repos request
 func (m *OpenpitrixDeleteReposRequest) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateRepoID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixDeleteReposRequest) validateRepoID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.RepoID) { // not required
-		return nil
-	}
-
 	return nil
 }
 

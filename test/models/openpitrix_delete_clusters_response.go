@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -25,39 +24,6 @@ type OpenpitrixDeleteClustersResponse struct {
 
 // Validate validates this openpitrix delete clusters response
 func (m *OpenpitrixDeleteClustersResponse) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateClusterID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateJobID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixDeleteClustersResponse) validateClusterID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.ClusterID) { // not required
-		return nil
-	}
-
-	return nil
-}
-
-func (m *OpenpitrixDeleteClustersResponse) validateJobID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.JobID) { // not required
-		return nil
-	}
-
 	return nil
 }
 

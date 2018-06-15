@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeRuntimesResponse struct {
 
 	// runtime set
-	RuntimeSet OpenpitrixDescribeRuntimesResponseRuntimeSet `json:"runtime_set"`
+	RuntimeSet []*OpenpitrixRuntime `json:"runtime_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeRuntimesResponse struct {
 func (m *OpenpitrixDescribeRuntimesResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateRuntimeSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeRuntimesResponse) validateRuntimeSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RuntimeSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RuntimeSet); i++ {
+		if swag.IsZero(m.RuntimeSet[i]) { // not required
+			continue
+		}
+
+		if m.RuntimeSet[i] != nil {
+			if err := m.RuntimeSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("runtime_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

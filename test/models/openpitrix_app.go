@@ -6,10 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixApp openpitrix app
@@ -20,12 +23,13 @@ type OpenpitrixApp struct {
 	AppID string `json:"app_id,omitempty"`
 
 	// category set
-	CategorySet OpenpitrixAppCategorySet `json:"category_set"`
+	CategorySet []*OpenpitrixResourceCategory `json:"category_set"`
 
 	// chart name
 	ChartName string `json:"chart_name,omitempty"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description
@@ -68,9 +72,11 @@ type OpenpitrixApp struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// update time
+	// Format: date-time
 	UpdateTime strfmt.DateTime `json:"update_time,omitempty"`
 }
 
@@ -78,14 +84,67 @@ type OpenpitrixApp struct {
 func (m *OpenpitrixApp) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCategorySet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateLatestAppVersion(formats); err != nil {
-		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUpdateTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixApp) validateCategorySet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CategorySet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.CategorySet); i++ {
+		if swag.IsZero(m.CategorySet[i]) { // not required
+			continue
+		}
+
+		if m.CategorySet[i] != nil {
+			if err := m.CategorySet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("category_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixApp) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -96,13 +155,38 @@ func (m *OpenpitrixApp) validateLatestAppVersion(formats strfmt.Registry) error 
 	}
 
 	if m.LatestAppVersion != nil {
-
 		if err := m.LatestAppVersion.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("latest_app_version")
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixApp) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixApp) validateUpdateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.UpdateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("update_time", "body", "date-time", m.UpdateTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

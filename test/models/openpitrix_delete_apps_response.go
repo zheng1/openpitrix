@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -22,25 +21,6 @@ type OpenpitrixDeleteAppsResponse struct {
 
 // Validate validates this openpitrix delete apps response
 func (m *OpenpitrixDeleteAppsResponse) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateAppID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixDeleteAppsResponse) validateAppID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AppID) { // not required
-		return nil
-	}
-
 	return nil
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixTask openpitrix task
@@ -17,6 +18,7 @@ import (
 type OpenpitrixTask struct {
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// directive
@@ -44,6 +46,7 @@ type OpenpitrixTask struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// target
@@ -60,14 +63,34 @@ type OpenpitrixTask struct {
 func (m *OpenpitrixTask) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateErrorCode(formats); err != nil {
-		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixTask) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -78,13 +101,25 @@ func (m *OpenpitrixTask) validateErrorCode(formats strfmt.Registry) error {
 	}
 
 	if m.ErrorCode != nil {
-
 		if err := m.ErrorCode.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("error_code")
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixTask) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

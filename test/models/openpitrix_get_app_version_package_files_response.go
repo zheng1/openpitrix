@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixGetAppVersionPackageFilesResponse openpitrix get app version package files response
@@ -27,9 +28,34 @@ type OpenpitrixGetAppVersionPackageFilesResponse struct {
 func (m *OpenpitrixGetAppVersionPackageFilesResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateFiles(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixGetAppVersionPackageFilesResponse) validateFiles(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Files) { // not required
+		return nil
+	}
+
+	for k := range m.Files {
+
+		if swag.IsZero(m.Files[k]) { // not required
+			continue
+		}
+
+		if err := validate.FormatOf("files"+"."+k, "body", "byte", m.Files[k].String(), formats); err != nil {
+			return err
+		}
+
+	}
+
 	return nil
 }
 

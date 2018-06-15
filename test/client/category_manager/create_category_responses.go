@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"openpitrix.io/openpitrix/test/models"
+	models "openpitrix.io/openpitrix/test/models"
 )
 
 // CreateCategoryReader is a Reader for the CreateCategory structure.

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixClusterNode openpitrix cluster node
@@ -29,6 +30,7 @@ type OpenpitrixClusterNode struct {
 	ClusterRole *OpenpitrixClusterRole `json:"cluster_role,omitempty"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// custom metadata
@@ -77,6 +79,7 @@ type OpenpitrixClusterNode struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// subnet id
@@ -94,27 +97,30 @@ func (m *OpenpitrixClusterNode) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateClusterCommon(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateClusterRole(formats); err != nil {
-		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateCreateTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateGlobalServerID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateGroupID(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateServerID(formats); err != nil {
-		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -131,7 +137,6 @@ func (m *OpenpitrixClusterNode) validateClusterCommon(formats strfmt.Registry) e
 	}
 
 	if m.ClusterCommon != nil {
-
 		if err := m.ClusterCommon.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("cluster_common")
@@ -150,13 +155,25 @@ func (m *OpenpitrixClusterNode) validateClusterRole(formats strfmt.Registry) err
 	}
 
 	if m.ClusterRole != nil {
-
 		if err := m.ClusterRole.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("cluster_role")
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixClusterNode) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil
@@ -169,7 +186,6 @@ func (m *OpenpitrixClusterNode) validateGlobalServerID(formats strfmt.Registry) 
 	}
 
 	if m.GlobalServerID != nil {
-
 		if err := m.GlobalServerID.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("global_server_id")
@@ -188,7 +204,6 @@ func (m *OpenpitrixClusterNode) validateGroupID(formats strfmt.Registry) error {
 	}
 
 	if m.GroupID != nil {
-
 		if err := m.GroupID.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("group_id")
@@ -207,13 +222,25 @@ func (m *OpenpitrixClusterNode) validateServerID(formats strfmt.Registry) error 
 	}
 
 	if m.ServerID != nil {
-
 		if err := m.ServerID.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("server_id")
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixClusterNode) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

@@ -45,9 +45,6 @@ func NewHTTPClient(formats strfmt.Registry) *Openpitrix {
 // using a customizable transport config.
 func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Openpitrix {
 	// ensure nullable parameters have default
-	if formats == nil {
-		formats = strfmt.Default
-	}
 	if cfg == nil {
 		cfg = DefaultTransportConfig()
 	}
@@ -59,6 +56,11 @@ func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Ope
 
 // New creates a new openpitrix client
 func New(transport runtime.ClientTransport, formats strfmt.Registry) *Openpitrix {
+	// ensure nullable parameters have default
+	if formats == nil {
+		formats = strfmt.Default
+	}
+
 	cli := new(Openpitrix)
 	cli.Transport = transport
 

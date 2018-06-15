@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixResourceCategory openpitrix resource category
@@ -20,6 +21,7 @@ type OpenpitrixResourceCategory struct {
 	CategoryID string `json:"category_id,omitempty"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// locale
@@ -32,6 +34,7 @@ type OpenpitrixResourceCategory struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 }
 
@@ -39,9 +42,43 @@ type OpenpitrixResourceCategory struct {
 func (m *OpenpitrixResourceCategory) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixResourceCategory) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixResourceCategory) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

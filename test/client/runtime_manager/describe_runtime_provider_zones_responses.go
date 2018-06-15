@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"openpitrix.io/openpitrix/test/models"
+	models "openpitrix.io/openpitrix/test/models"
 )
 
 // DescribeRuntimeProviderZonesReader is a Reader for the DescribeRuntimeProviderZones structure.

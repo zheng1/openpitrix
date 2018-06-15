@@ -17,7 +17,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"openpitrix.io/openpitrix/test/models"
+	models "openpitrix.io/openpitrix/test/models"
 )
 
 // NewDeleteClusterNodesParams creates a new DeleteClusterNodesParams object

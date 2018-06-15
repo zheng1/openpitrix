@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -26,7 +28,7 @@ type OpenpitrixModifyRepoRequest struct {
 	Description string `json:"description,omitempty"`
 
 	// labels
-	Labels OpenpitrixModifyRepoRequestLabels `json:"labels"`
+	Labels []*OpenpitrixRepoLabel `json:"labels"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -38,7 +40,7 @@ type OpenpitrixModifyRepoRequest struct {
 	RepoID string `json:"repo_id,omitempty"`
 
 	// selectors
-	Selectors OpenpitrixModifyRepoRequestSelectors `json:"selectors"`
+	Selectors []*OpenpitrixRepoSelector `json:"selectors"`
 
 	// type
 	Type string `json:"type,omitempty"`
@@ -54,8 +56,11 @@ type OpenpitrixModifyRepoRequest struct {
 func (m *OpenpitrixModifyRepoRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateProviders(formats); err != nil {
-		// prop
+	if err := m.validateLabels(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSelectors(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -65,10 +70,51 @@ func (m *OpenpitrixModifyRepoRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *OpenpitrixModifyRepoRequest) validateProviders(formats strfmt.Registry) error {
+func (m *OpenpitrixModifyRepoRequest) validateLabels(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Providers) { // not required
+	if swag.IsZero(m.Labels) { // not required
 		return nil
+	}
+
+	for i := 0; i < len(m.Labels); i++ {
+		if swag.IsZero(m.Labels[i]) { // not required
+			continue
+		}
+
+		if m.Labels[i] != nil {
+			if err := m.Labels[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("labels" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixModifyRepoRequest) validateSelectors(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Selectors) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Selectors); i++ {
+		if swag.IsZero(m.Selectors[i]) { // not required
+			continue
+		}
+
+		if m.Selectors[i] != nil {
+			if err := m.Selectors[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("selectors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil

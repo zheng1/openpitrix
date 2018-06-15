@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -31,39 +30,6 @@ type OpenpitrixDeleteClusterNodesRequest struct {
 
 // Validate validates this openpitrix delete cluster nodes request
 func (m *OpenpitrixDeleteClusterNodesRequest) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateAdvancedParam(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateNodeID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixDeleteClusterNodesRequest) validateAdvancedParam(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AdvancedParam) { // not required
-		return nil
-	}
-
-	return nil
-}
-
-func (m *OpenpitrixDeleteClusterNodesRequest) validateNodeID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.NodeID) { // not required
-		return nil
-	}
-
 	return nil
 }
 

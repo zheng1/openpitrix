@@ -28,7 +28,6 @@ func (m *OpenpitrixIndexRepoResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateRepoEvent(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -45,7 +44,6 @@ func (m *OpenpitrixIndexRepoResponse) validateRepoEvent(formats strfmt.Registry)
 	}
 
 	if m.RepoEvent != nil {
-
 		if err := m.RepoEvent.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("repo_event")

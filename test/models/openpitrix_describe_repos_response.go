@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeReposResponse struct {
 
 	// repo set
-	RepoSet OpenpitrixDescribeReposResponseRepoSet `json:"repo_set"`
+	RepoSet []*OpenpitrixRepo `json:"repo_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeReposResponse struct {
 func (m *OpenpitrixDescribeReposResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateRepoSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeReposResponse) validateRepoSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RepoSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RepoSet); i++ {
+		if swag.IsZero(m.RepoSet[i]) { // not required
+			continue
+		}
+
+		if m.RepoSet[i] != nil {
+			if err := m.RepoSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("repo_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

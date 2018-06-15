@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeSubnetsResponse struct {
 
 	// subnet set
-	SubnetSet OpenpitrixDescribeSubnetsResponseSubnetSet `json:"subnet_set"`
+	SubnetSet []*OpenpitrixSubnet `json:"subnet_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeSubnetsResponse struct {
 func (m *OpenpitrixDescribeSubnetsResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateSubnetSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeSubnetsResponse) validateSubnetSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.SubnetSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.SubnetSet); i++ {
+		if swag.IsZero(m.SubnetSet[i]) { // not required
+			continue
+		}
+
+		if m.SubnetSet[i] != nil {
+			if err := m.SubnetSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("subnet_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

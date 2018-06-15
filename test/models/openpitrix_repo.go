@@ -6,10 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixRepo openpitrix repo
@@ -17,9 +20,10 @@ import (
 type OpenpitrixRepo struct {
 
 	// category set
-	CategorySet OpenpitrixRepoCategorySet `json:"category_set"`
+	CategorySet []*OpenpitrixResourceCategory `json:"category_set"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// credential
@@ -29,7 +33,7 @@ type OpenpitrixRepo struct {
 	Description string `json:"description,omitempty"`
 
 	// labels
-	Labels OpenpitrixRepoLabels `json:"labels"`
+	Labels []*OpenpitrixRepoLabel `json:"labels"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -44,12 +48,13 @@ type OpenpitrixRepo struct {
 	RepoID string `json:"repo_id,omitempty"`
 
 	// selectors
-	Selectors OpenpitrixRepoSelectors `json:"selectors"`
+	Selectors []*OpenpitrixRepoSelector `json:"selectors"`
 
 	// status
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// type
@@ -66,8 +71,23 @@ type OpenpitrixRepo struct {
 func (m *OpenpitrixRepo) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateProviders(formats); err != nil {
-		// prop
+	if err := m.validateCategorySet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateLabels(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSelectors(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -77,10 +97,102 @@ func (m *OpenpitrixRepo) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *OpenpitrixRepo) validateProviders(formats strfmt.Registry) error {
+func (m *OpenpitrixRepo) validateCategorySet(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Providers) { // not required
+	if swag.IsZero(m.CategorySet) { // not required
 		return nil
+	}
+
+	for i := 0; i < len(m.CategorySet); i++ {
+		if swag.IsZero(m.CategorySet[i]) { // not required
+			continue
+		}
+
+		if m.CategorySet[i] != nil {
+			if err := m.CategorySet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("category_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRepo) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRepo) validateLabels(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Labels) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Labels); i++ {
+		if swag.IsZero(m.Labels[i]) { // not required
+			continue
+		}
+
+		if m.Labels[i] != nil {
+			if err := m.Labels[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("labels" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRepo) validateSelectors(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Selectors) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Selectors); i++ {
+		if swag.IsZero(m.Selectors[i]) { // not required
+			continue
+		}
+
+		if m.Selectors[i] != nil {
+			if err := m.Selectors[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("selectors" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixRepo) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

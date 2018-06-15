@@ -36,33 +36,17 @@ type OpenpitrixResizeClusterRequest struct {
 func (m *OpenpitrixResizeClusterRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAdvancedParam(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateCPU(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateMemory(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *OpenpitrixResizeClusterRequest) validateAdvancedParam(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AdvancedParam) { // not required
-		return nil
-	}
-
 	return nil
 }
 
@@ -73,7 +57,6 @@ func (m *OpenpitrixResizeClusterRequest) validateCPU(formats strfmt.Registry) er
 	}
 
 	if m.CPU != nil {
-
 		if err := m.CPU.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("cpu")
@@ -92,7 +75,6 @@ func (m *OpenpitrixResizeClusterRequest) validateMemory(formats strfmt.Registry)
 	}
 
 	if m.Memory != nil {
-
 		if err := m.Memory.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("memory")

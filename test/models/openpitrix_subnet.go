@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixSubnet openpitrix subnet
@@ -17,6 +18,7 @@ import (
 type OpenpitrixSubnet struct {
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description
@@ -42,13 +44,11 @@ type OpenpitrixSubnet struct {
 func (m *OpenpitrixSubnet) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateInstanceID(formats); err != nil {
-		// prop
+	if err := m.validateCreateTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateSubnetType(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -58,10 +58,14 @@ func (m *OpenpitrixSubnet) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *OpenpitrixSubnet) validateInstanceID(formats strfmt.Registry) error {
+func (m *OpenpitrixSubnet) validateCreateTime(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.InstanceID) { // not required
+	if swag.IsZero(m.CreateTime) { // not required
 		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil
@@ -74,7 +78,6 @@ func (m *OpenpitrixSubnet) validateSubnetType(formats strfmt.Registry) error {
 	}
 
 	if m.SubnetType != nil {
-
 		if err := m.SubnetType.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("subnet_type")

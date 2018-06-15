@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeClusterNodesResponse struct {
 
 	// cluster node set
-	ClusterNodeSet OpenpitrixDescribeClusterNodesResponseClusterNodeSet `json:"cluster_node_set"`
+	ClusterNodeSet []*OpenpitrixClusterNode `json:"cluster_node_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeClusterNodesResponse struct {
 func (m *OpenpitrixDescribeClusterNodesResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateClusterNodeSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeClusterNodesResponse) validateClusterNodeSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterNodeSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterNodeSet); i++ {
+		if swag.IsZero(m.ClusterNodeSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterNodeSet[i] != nil {
+			if err := m.ClusterNodeSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_node_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

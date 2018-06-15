@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeJobsResponse struct {
 
 	// job set
-	JobSet OpenpitrixDescribeJobsResponseJobSet `json:"job_set"`
+	JobSet []*OpenpitrixJob `json:"job_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeJobsResponse struct {
 func (m *OpenpitrixDescribeJobsResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateJobSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeJobsResponse) validateJobSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.JobSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.JobSet); i++ {
+		if swag.IsZero(m.JobSet[i]) { // not required
+			continue
+		}
+
+		if m.JobSet[i] != nil {
+			if err := m.JobSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("job_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

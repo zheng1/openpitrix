@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeAppVersionsResponse struct {
 
 	// app version set
-	AppVersionSet OpenpitrixDescribeAppVersionsResponseAppVersionSet `json:"app_version_set"`
+	AppVersionSet []*OpenpitrixAppVersion `json:"app_version_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeAppVersionsResponse struct {
 func (m *OpenpitrixDescribeAppVersionsResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAppVersionSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeAppVersionsResponse) validateAppVersionSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.AppVersionSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.AppVersionSet); i++ {
+		if swag.IsZero(m.AppVersionSet[i]) { // not required
+			continue
+		}
+
+		if m.AppVersionSet[i] != nil {
+			if err := m.AppVersionSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("app_version_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

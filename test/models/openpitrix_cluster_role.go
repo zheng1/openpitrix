@@ -55,27 +55,22 @@ func (m *OpenpitrixClusterRole) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCPU(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateGpu(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateInstanceSize(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateMemory(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateStorageSize(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -92,7 +87,6 @@ func (m *OpenpitrixClusterRole) validateCPU(formats strfmt.Registry) error {
 	}
 
 	if m.CPU != nil {
-
 		if err := m.CPU.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("cpu")
@@ -111,7 +105,6 @@ func (m *OpenpitrixClusterRole) validateGpu(formats strfmt.Registry) error {
 	}
 
 	if m.Gpu != nil {
-
 		if err := m.Gpu.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("gpu")
@@ -130,7 +123,6 @@ func (m *OpenpitrixClusterRole) validateInstanceSize(formats strfmt.Registry) er
 	}
 
 	if m.InstanceSize != nil {
-
 		if err := m.InstanceSize.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("instance_size")
@@ -149,7 +141,6 @@ func (m *OpenpitrixClusterRole) validateMemory(formats strfmt.Registry) error {
 	}
 
 	if m.Memory != nil {
-
 		if err := m.Memory.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("memory")
@@ -168,7 +159,6 @@ func (m *OpenpitrixClusterRole) validateStorageSize(formats strfmt.Registry) err
 	}
 
 	if m.StorageSize != nil {
-
 		if err := m.StorageSize.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("storage_size")

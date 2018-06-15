@@ -6,10 +6,13 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // OpenpitrixCluster openpitrix cluster
@@ -20,27 +23,28 @@ type OpenpitrixCluster struct {
 	AppID string `json:"app_id,omitempty"`
 
 	// cluster common set
-	ClusterCommonSet OpenpitrixClusterClusterCommonSet `json:"cluster_common_set"`
+	ClusterCommonSet []*OpenpitrixClusterCommon `json:"cluster_common_set"`
 
 	// cluster id
 	ClusterID string `json:"cluster_id,omitempty"`
 
 	// cluster link set
-	ClusterLinkSet OpenpitrixClusterClusterLinkSet `json:"cluster_link_set"`
+	ClusterLinkSet []*OpenpitrixClusterLink `json:"cluster_link_set"`
 
 	// cluster loadbalancer set
-	ClusterLoadbalancerSet OpenpitrixClusterClusterLoadbalancerSet `json:"cluster_loadbalancer_set"`
+	ClusterLoadbalancerSet []*OpenpitrixClusterLoadbalancer `json:"cluster_loadbalancer_set"`
 
 	// cluster node set
-	ClusterNodeSet OpenpitrixClusterClusterNodeSet `json:"cluster_node_set"`
+	ClusterNodeSet []*OpenpitrixClusterNode `json:"cluster_node_set"`
 
 	// cluster role set
-	ClusterRoleSet OpenpitrixClusterClusterRoleSet `json:"cluster_role_set"`
+	ClusterRoleSet []*OpenpitrixClusterRole `json:"cluster_role_set"`
 
 	// cluster type
 	ClusterType *ProtobufUint32Value `json:"cluster_type,omitempty"`
 
 	// create time
+	// Format: date-time
 	CreateTime strfmt.DateTime `json:"create_time,omitempty"`
 
 	// description
@@ -71,6 +75,7 @@ type OpenpitrixCluster struct {
 	Status string `json:"status,omitempty"`
 
 	// status time
+	// Format: date-time
 	StatusTime strfmt.DateTime `json:"status_time,omitempty"`
 
 	// subnet id
@@ -83,6 +88,7 @@ type OpenpitrixCluster struct {
 	UpgradeStatus string `json:"upgrade_status,omitempty"`
 
 	// upgrade time
+	// Format: date-time
 	UpgradeTime strfmt.DateTime `json:"upgrade_time,omitempty"`
 
 	// version id
@@ -96,14 +102,170 @@ type OpenpitrixCluster struct {
 func (m *OpenpitrixCluster) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateClusterCommonSet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateClusterLinkSet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateClusterLoadbalancerSet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateClusterNodeSet(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateClusterRoleSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateClusterType(formats); err != nil {
-		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateCreateTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatusTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUpgradeTime(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateClusterCommonSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterCommonSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterCommonSet); i++ {
+		if swag.IsZero(m.ClusterCommonSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterCommonSet[i] != nil {
+			if err := m.ClusterCommonSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_common_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateClusterLinkSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterLinkSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterLinkSet); i++ {
+		if swag.IsZero(m.ClusterLinkSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterLinkSet[i] != nil {
+			if err := m.ClusterLinkSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_link_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateClusterLoadbalancerSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterLoadbalancerSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterLoadbalancerSet); i++ {
+		if swag.IsZero(m.ClusterLoadbalancerSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterLoadbalancerSet[i] != nil {
+			if err := m.ClusterLoadbalancerSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_loadbalancer_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateClusterNodeSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterNodeSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterNodeSet); i++ {
+		if swag.IsZero(m.ClusterNodeSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterNodeSet[i] != nil {
+			if err := m.ClusterNodeSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_node_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateClusterRoleSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ClusterRoleSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.ClusterRoleSet); i++ {
+		if swag.IsZero(m.ClusterRoleSet[i]) { // not required
+			continue
+		}
+
+		if m.ClusterRoleSet[i] != nil {
+			if err := m.ClusterRoleSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("cluster_role_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -114,13 +276,51 @@ func (m *OpenpitrixCluster) validateClusterType(formats strfmt.Registry) error {
 	}
 
 	if m.ClusterType != nil {
-
 		if err := m.ClusterType.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("cluster_type")
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateCreateTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CreateTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("create_time", "body", "date-time", m.CreateTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateStatusTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StatusTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("status_time", "body", "date-time", m.StatusTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OpenpitrixCluster) validateUpgradeTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.UpgradeTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("upgrade_time", "body", "date-time", m.UpgradeTime.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

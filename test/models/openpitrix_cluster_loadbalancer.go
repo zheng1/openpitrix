@@ -37,7 +37,6 @@ func (m *OpenpitrixClusterLoadbalancer) Validate(formats strfmt.Registry) error 
 	var res []error
 
 	if err := m.validateLoadbalancerPort(formats); err != nil {
-		// prop
 		res = append(res, err)
 	}
 
@@ -54,7 +53,6 @@ func (m *OpenpitrixClusterLoadbalancer) validateLoadbalancerPort(formats strfmt.
 	}
 
 	if m.LoadbalancerPort != nil {
-
 		if err := m.LoadbalancerPort.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("loadbalancer_port")

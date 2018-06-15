@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -17,7 +19,7 @@ import (
 type OpenpitrixDescribeRepoEventsResponse struct {
 
 	// repo event set
-	RepoEventSet OpenpitrixDescribeRepoEventsResponseRepoEventSet `json:"repo_event_set"`
+	RepoEventSet []*OpenpitrixRepoEvent `json:"repo_event_set"`
 
 	// total count
 	TotalCount int64 `json:"total_count,omitempty"`
@@ -27,9 +29,38 @@ type OpenpitrixDescribeRepoEventsResponse struct {
 func (m *OpenpitrixDescribeRepoEventsResponse) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateRepoEventSet(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *OpenpitrixDescribeRepoEventsResponse) validateRepoEventSet(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RepoEventSet) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RepoEventSet); i++ {
+		if swag.IsZero(m.RepoEventSet[i]) { // not required
+			continue
+		}
+
+		if m.RepoEventSet[i] != nil {
+			if err := m.RepoEventSet[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("repo_event_set" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

@@ -8,7 +8,6 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -25,39 +24,6 @@ type OpenpitrixRecoverClustersRequest struct {
 
 // Validate validates this openpitrix recover clusters request
 func (m *OpenpitrixRecoverClustersRequest) Validate(formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.validateAdvancedParam(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateClusterID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *OpenpitrixRecoverClustersRequest) validateAdvancedParam(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.AdvancedParam) { // not required
-		return nil
-	}
-
-	return nil
-}
-
-func (m *OpenpitrixRecoverClustersRequest) validateClusterID(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.ClusterID) { // not required
-		return nil
-	}
-
 	return nil
 }
 
