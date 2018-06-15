@@ -7,7 +7,8 @@ TRAG.Gopkg:=openpitrix.io/openpitrix
 TRAG.Version:=$(TRAG.Gopkg)/pkg/version
 
 DOCKER_TAGS=latest
-RUN_IN_DOCKER:=docker run -it -v `pwd`:/go/src/$(TRAG.Gopkg) -v `pwd`/tmp/cache:/root/.cache/go-build  -w /go/src/$(TRAG.Gopkg) -e GOBIN=/go/src/$(TRAG.Gopkg)/tmp/bin -e USER_ID=`id -u` -e GROUP_ID=`id -g` openpitrix/openpitrix-builder
+BUILDER_IMAGE_NAME=openpitrix/openpitrix-builder
+RUN_IN_DOCKER:=docker run -it -v `pwd`:/go/src/$(TRAG.Gopkg) -v `pwd`/tmp/cache:/root/.cache/go-build  -w /go/src/$(TRAG.Gopkg) -e GOBIN=/go/src/$(TRAG.Gopkg)/tmp/bin -e USER_ID=`id -u` -e GROUP_ID=`id -g` $(BUILDER_IMAGE_NAME)
 GO_FMT:=goimports -l -w -e -local=openpitrix -srcdir=/go/src/$(TRAG.Gopkg)
 GO_FILES:=./cmd ./test ./pkg
 DB_TEST:=OP_DB_UNIT_TEST=1 OPENPITRIX_MYSQL_HOST=127.0.0.1 OPENPITRIX_MYSQL_PORT=13306
@@ -59,7 +60,7 @@ update-vendor: ## Update dependence
 
 .PHONY: update-builder
 update-builder: ## Pull openpitrix-builder image
-	docker pull openpitrix/openpitrix-builder
+	docker pull $(BUILDER_IMAGE_NAME)
 	@echo "update-builder done"
 
 .PHONY: generate-in-local
@@ -71,6 +72,8 @@ generate-in-local: ## Generate code from protobuf file in local
 .PHONY: generate
 generate: generate-global-config ## Generate code from protobuf file in docker
 	$(RUN_IN_DOCKER) make generate-in-local
+	@$(RUN_IN_DOCKER) cat /VERSION > ./pkg/pb/BUILDER_VERSION
+	@cat ./pkg/pb/BUILDER_VERSION
 	@echo "generate done"
 
 .PHONY: generate-global-config
