@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"openpitrix.io/openpitrix/pkg/constants"
+	"openpitrix.io/openpitrix/pkg/gerr"
 	"openpitrix.io/openpitrix/pkg/manager"
 	"openpitrix.io/openpitrix/pkg/pb"
 	"openpitrix.io/openpitrix/pkg/pi"
@@ -24,6 +25,11 @@ var SupportedVisibility = []string{
 func (p *Server) Checker(ctx context.Context, req interface{}) error {
 	switch r := req.(type) {
 	case *pb.CreateRepoRequest:
+		sender := senderutil.GetSenderFromContext(ctx)
+		if !sender.IsGlobalAdmin() && r.GetVisibility().GetValue() == constants.VisibilityPublic {
+			return gerr.New(ctx, gerr.InvalidArgument, gerr.ErrorUnsupportedParameterValue,
+				"visibility", constants.VisibilityPublic)
+		}
 		return manager.NewChecker(ctx, r).
 			Role(constants.AllDeveloperRoles).
 			Required("type", "name", "url", "credential", "visibility", "providers").
