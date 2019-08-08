@@ -139,7 +139,7 @@ func (b *SelectQuery) Load(value interface{}) (int, error) {
 }
 
 func (b *SelectQuery) LoadOne(value interface{}) error {
-	return b.SelectBuilder.LoadOneContext(b.ctx, value)
+	return b.SelectBuilder.Limit(1).LoadOneContext(b.ctx, value)
 }
 
 func getColumns(dbrColumns []interface{}) string {
