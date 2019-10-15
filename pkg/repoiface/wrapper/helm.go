@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"k8s.io/helm/pkg/repo"
+	"github.com/kubernetes/helm/pkg/repo"
 
 	"openpitrix.io/openpitrix/pkg/util/jsonutil"
 )

@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	v3rpc "go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
-	pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
-	mvccpb "go.etcd.io/etcd/mvcc/mvccpb"
+	v3rpc "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
+	mvccpb "github.com/coreos/etcd/mvcc/mvccpb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -371,6 +371,10 @@ func (w *watcher) Close() (err error) {
 			err = werr
 		}
 	}
+	// Consider context.Canceled as a successful close
+	if err == context.Canceled {
+		err = nil
+	}
 	return err
 }
 
@@ -380,6 +384,7 @@ func (w *watcher) RequestProgress(ctx context.Context) (err error) {
 
 	w.mu.Lock()
 	if w.streams == nil {
+		w.mu.Unlock()
 		return fmt.Errorf("no stream found for context")
 	}
 	wgs := w.streams[ctxKey]

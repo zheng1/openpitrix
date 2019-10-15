@@ -31,10 +31,10 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/ghodss/yaml"
 
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/proto/hapi/chart"
-	"k8s.io/helm/pkg/provenance"
-	"k8s.io/helm/pkg/urlutil"
+	"github.com/kubernetes/helm/pkg/chartutil"
+	"github.com/kubernetes/helm/pkg/proto/hapi/chart"
+	"github.com/kubernetes/helm/pkg/provenance"
+	"github.com/kubernetes/helm/pkg/urlutil"
 )
 
 var indexPath = "index.yaml"
@@ -165,6 +165,15 @@ func (i IndexFile) Get(name, version string) (*ChartVersion, error) {
 		constraint, err = semver.NewConstraint(version)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// when customer input exact version, check whether have exact match one first
+	if len(version) != 0 {
+		for _, ver := range vs {
+			if version == ver.Version {
+				return ver, nil
+			}
 		}
 	}
 

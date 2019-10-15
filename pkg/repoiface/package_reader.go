@@ -8,8 +8,8 @@ import (
 	"bytes"
 	"context"
 
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/repo"
+	"github.com/kubernetes/helm/pkg/chartutil"
+	"github.com/kubernetes/helm/pkg/repo"
 
 	"openpitrix.io/openpitrix/pkg/devkit"
 	"openpitrix.io/openpitrix/pkg/devkit/opapp"

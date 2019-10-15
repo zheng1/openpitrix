@@ -17,8 +17,8 @@ package clientv3
 import (
 	"context"
 
-	"go.etcd.io/etcd/etcdserver/api/v3rpc/rpctypes"
-	pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
+	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
+	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -42,10 +42,6 @@ func (rp retryPolicy) String() string {
 		return "UNKNOWN"
 	}
 }
-
-type rpcFunc func(ctx context.Context) error
-type retryRPCFunc func(context.Context, rpcFunc, retryPolicy) error
-type retryStopErrFunc func(error) bool
 
 // isSafeRetryImmutableRPC returns "true" when an immutable request is safe for retry.
 //

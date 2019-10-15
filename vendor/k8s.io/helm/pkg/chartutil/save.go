@@ -28,7 +28,7 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"k8s.io/helm/pkg/proto/hapi/chart"
+	"github.com/kubernetes/helm/pkg/proto/hapi/chart"
 )
 
 var headerBytes = []byte("+aHR0cHM6Ly95b3V0dS5iZS96OVV6MWljandyTQo=")
@@ -63,6 +63,12 @@ func SaveDir(c *chart.Chart, dest string) error {
 	// Save templates
 	for _, f := range c.Templates {
 		n := filepath.Join(outdir, f.Name)
+
+		d := filepath.Dir(n)
+		if err := os.MkdirAll(d, 0755); err != nil {
+			return err
+		}
+
 		if err := ioutil.WriteFile(n, f.Data, 0644); err != nil {
 			return err
 		}

@@ -14,7 +14,7 @@
 
 package clientv3
 
-import pb "go.etcd.io/etcd/etcdserver/etcdserverpb"
+import pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
 
 type opType int
 
@@ -26,7 +26,9 @@ const (
 	tTxn
 )
 
-var noPrefixEnd = []byte{0}
+var (
+	noPrefixEnd = []byte{0}
+)
 
 // Op represents an Operation that kv can execute.
 type Op struct {
@@ -81,15 +83,8 @@ type Op struct {
 
 // accessors / mutators
 
-// IsTxn returns true if the "Op" type is transaction.
-func (op Op) IsTxn() bool {
-	return op.t == tTxn
-}
-
-// Txn returns the comparison(if) operations, "then" operations, and "else" operations.
-func (op Op) Txn() ([]Cmp, []Op, []Op) {
-	return op.cmps, op.thenOps, op.elseOps
-}
+func (op Op) IsTxn() bool              { return op.t == tTxn }
+func (op Op) Txn() ([]Cmp, []Op, []Op) { return op.cmps, op.thenOps, op.elseOps }
 
 // KeyBytes returns the byte slice holding the Op's key.
 func (op Op) KeyBytes() []byte { return op.key }
@@ -216,14 +211,12 @@ func (op Op) isWrite() bool {
 	return op.t != tRange
 }
 
-// OpGet returns "get" operation based on given key and operation options.
 func OpGet(key string, opts ...OpOption) Op {
 	ret := Op{t: tRange, key: []byte(key)}
 	ret.applyOpts(opts)
 	return ret
 }
 
-// OpDelete returns "delete" operation based on given key and operation options.
 func OpDelete(key string, opts ...OpOption) Op {
 	ret := Op{t: tDeleteRange, key: []byte(key)}
 	ret.applyOpts(opts)
@@ -252,7 +245,6 @@ func OpDelete(key string, opts ...OpOption) Op {
 	return ret
 }
 
-// OpPut returns "put" operation based on given key-value and operation options.
 func OpPut(key, val string, opts ...OpOption) Op {
 	ret := Op{t: tPut, key: []byte(key), val: []byte(val)}
 	ret.applyOpts(opts)
@@ -281,7 +273,6 @@ func OpPut(key, val string, opts ...OpOption) Op {
 	return ret
 }
 
-// OpTxn returns "txn" operation based on given transaction conditions.
 func OpTxn(cmps []Cmp, thenOps []Op, elseOps []Op) Op {
 	return Op{t: tTxn, cmps: cmps, thenOps: thenOps, elseOps: elseOps}
 }
@@ -481,17 +472,6 @@ func WithPrevKV() OpOption {
 	}
 }
 
-// WithFragment to receive raw watch response with fragmentation.
-// Fragmentation is disabled by default. If fragmentation is enabled,
-// etcd watch server will split watch response before sending to clients
-// when the total size of watch events exceed server-side request limit.
-// The default server-side request limit is 1.5 MiB, which can be configured
-// as "--max-request-bytes" flag value + gRPC-overhead 512 bytes.
-// See "etcdserver/api/v3rpc/watch.go" for more details.
-func WithFragment() OpOption {
-	return func(op *Op) { op.fragment = true }
-}
-
 // WithIgnoreValue updates the key using its current value.
 // This option can not be combined with non-empty values.
 // Returns an error if the key does not exist.
@@ -536,4 +516,15 @@ func toLeaseTimeToLiveRequest(id LeaseID, opts ...LeaseOption) *pb.LeaseTimeToLi
 	ret := &LeaseOp{id: id}
 	ret.applyOpts(opts)
 	return &pb.LeaseTimeToLiveRequest{ID: int64(id), Keys: ret.attachedKeys}
+}
+
+// WithFragment to receive raw watch response with fragmentation.
+// Fragmentation is disabled by default. If fragmentation is enabled,
+// etcd watch server will split watch response before sending to clients
+// when the total size of watch events exceed server-side request limit.
+// The default server-side request limit is 1.5 MiB, which can be configured
+// as "--max-request-bytes" flag value + gRPC-overhead 512 bytes.
+// See "etcdserver/api/v3rpc/watch.go" for more details.
+func WithFragment() OpOption {
+	return func(op *Op) { op.fragment = true }
 }

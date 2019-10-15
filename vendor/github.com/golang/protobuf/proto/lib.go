@@ -308,14 +308,10 @@ var errInvalidUTF8 = &invalidUTF8Error{}
 // isNonFatal reports whether the error is either a RequiredNotSet error
 // or a InvalidUTF8 error.
 func isNonFatal(err error) bool {
-	if re, ok := err.(interface {
-		RequiredNotSet() bool
-	}); ok && re.RequiredNotSet() {
+	if re, ok := err.(interface{ RequiredNotSet() bool }); ok && re.RequiredNotSet() {
 		return true
 	}
-	if re, ok := err.(interface {
-		InvalidUTF8() bool
-	}); ok && re.InvalidUTF8() {
+	if re, ok := err.(interface{ InvalidUTF8() bool }); ok && re.InvalidUTF8() {
 		return true
 	}
 	return false
@@ -944,13 +940,19 @@ func isProto3Zero(v reflect.Value) bool {
 	return false
 }
 
-// ProtoPackageIsVersion2 is referenced from generated protocol buffer files
-// to assert that that code is compatible with this version of the proto package.
-const ProtoPackageIsVersion2 = true
+const (
+	// ProtoPackageIsVersion3 is referenced from generated protocol buffer files
+	// to assert that that code is compatible with this version of the proto package.
+	ProtoPackageIsVersion3 = true
 
-// ProtoPackageIsVersion1 is referenced from generated protocol buffer files
-// to assert that that code is compatible with this version of the proto package.
-const ProtoPackageIsVersion1 = true
+	// ProtoPackageIsVersion2 is referenced from generated protocol buffer files
+	// to assert that that code is compatible with this version of the proto package.
+	ProtoPackageIsVersion2 = true
+
+	// ProtoPackageIsVersion1 is referenced from generated protocol buffer files
+	// to assert that that code is compatible with this version of the proto package.
+	ProtoPackageIsVersion1 = true
+)
 
 // InternalMessageInfo is a type used internally by generated .pb.go files.
 // This type is not intended to be used by non-generated code.

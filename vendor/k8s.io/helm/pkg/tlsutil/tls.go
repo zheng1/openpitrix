@@ -21,7 +21,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/helm/pkg/urlutil"
+	"github.com/kubernetes/helm/pkg/urlutil"
 )
 
 func newTLSConfigCommon(certFile, keyFile, caFile string) (*tls.Config, error) {

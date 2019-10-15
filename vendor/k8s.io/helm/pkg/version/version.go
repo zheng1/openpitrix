@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package version // import "k8s.io/helm/pkg/version"
+package version // import "github.com/kubernetes/helm/pkg/version"
 
-import "k8s.io/helm/pkg/proto/hapi/version"
+import "github.com/kubernetes/helm/pkg/proto/hapi/version"
 
 var (
 	// Version is the current version of the Helm.
@@ -26,7 +26,7 @@ var (
 	// Increment major number for new feature additions and behavioral changes.
 	// Increment minor number for bug fixes and performance enhancements.
 	// Increment patch number for critical fixes to existing releases.
-	Version = "v2.11"
+	Version = "v2.14"
 
 	// BuildMetadata is extra build time data
 	BuildMetadata = "unreleased"

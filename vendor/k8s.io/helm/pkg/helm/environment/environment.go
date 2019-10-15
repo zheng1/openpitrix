@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"k8s.io/client-go/util/homedir"
-	"k8s.io/helm/pkg/helm/helmpath"
+	"github.com/kubernetes/helm/pkg/helm/helmpath"
 )
 
 const (

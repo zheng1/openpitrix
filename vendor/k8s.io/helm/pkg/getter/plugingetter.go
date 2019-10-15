@@ -22,8 +22,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"k8s.io/helm/pkg/helm/environment"
-	"k8s.io/helm/pkg/plugin"
+	"github.com/kubernetes/helm/pkg/helm/environment"
+	"github.com/kubernetes/helm/pkg/plugin"
 )
 
 // collectPlugins scans for getter plugins.

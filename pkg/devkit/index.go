@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"k8s.io/helm/pkg/provenance"
-	"k8s.io/helm/pkg/urlutil"
+	"github.com/kubernetes/helm/pkg/provenance"
+	"github.com/kubernetes/helm/pkg/urlutil"
 
 	"openpitrix.io/openpitrix/pkg/devkit/opapp"
 )

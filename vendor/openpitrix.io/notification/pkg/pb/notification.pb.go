@@ -4,6 +4,7 @@
 package pb
 
 import (
+	context "context"
 	fmt "fmt"
 	math "math"
 
@@ -11,9 +12,10 @@ import (
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
-	context "golang.org/x/net/context"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,16 +27,34 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type CreateNotificationRequest struct {
-	ContentType          *wrappers.StringValue `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Title                *wrappers.StringValue `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Content              *wrappers.StringValue `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
-	ShortContent         *wrappers.StringValue `protobuf:"bytes,4,opt,name=short_content,json=shortContent,proto3" json:"short_content,omitempty"`
-	ExpiredDays          *wrappers.UInt32Value `protobuf:"bytes,5,opt,name=expired_days,json=expiredDays,proto3" json:"expired_days,omitempty"`
-	Owner                *wrappers.StringValue `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
-	AddressInfo          *wrappers.StringValue `protobuf:"bytes,7,opt,name=address_info,json=addressInfo,proto3" json:"address_info,omitempty"`
+	//required, notification content type, eg:[invite|verify|fee|business|alert|other|event]
+	ContentType *wrappers.StringValue `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	//required, notification title
+	Title *wrappers.StringValue `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	//notification content, json fmt, eg:{"html":"test_content_html", "normal":"test_content_normal"}
+	Content *wrappers.StringValue `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	//notification short content
+	ShortContent *wrappers.StringValue `protobuf:"bytes,4,opt,name=short_content,json=shortContent,proto3" json:"short_content,omitempty"`
+	//notification expired days,  0 is for never expired.
+	ExpiredDays *wrappers.UInt32Value `protobuf:"bytes,5,opt,name=expired_days,json=expiredDays,proto3" json:"expired_days,omitempty"`
+	//notification owner
+	Owner *wrappers.StringValue `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
+	//the address to send the notification, json fmt, currently support 2 kinds types.
+	//1.key/value Type, key is the notification send Type,the value is the list of address,
+	//eg:{"email": ["xxx1@163.com", "xxx2@163.com"],"websocket": ["system", "user1"]}
+	//2.Array Type, eg:["adl-xxxx1", "adl-xxxx2"],
+	//the item is the address list id which is already created in advance.
+	AddressInfo *wrappers.StringValue `protobuf:"bytes,7,opt,name=address_info,json=addressInfo,proto3" json:"address_info,omitempty"`
+	//the available start time to receive notification
+	AvailableStartTime *wrappers.StringValue `protobuf:"bytes,8,opt,name=available_start_time,json=availableStartTime,proto3" json:"available_start_time,omitempty"`
+	//the available end time to receive notification
+	AvailableEndTime *wrappers.StringValue `protobuf:"bytes,9,opt,name=available_end_time,json=availableEndTime,proto3" json:"available_end_time,omitempty"`
+	//extra info is only used for websocket notification,to show which websocket client could accept it.
+	//eg:"{"ws_service": "ks","ws_message_type": "event"}"
+	Extra                *wrappers.StringValue `protobuf:"bytes,10,opt,name=extra,proto3" json:"extra,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -114,7 +134,29 @@ func (m *CreateNotificationRequest) GetAddressInfo() *wrappers.StringValue {
 	return nil
 }
 
+func (m *CreateNotificationRequest) GetAvailableStartTime() *wrappers.StringValue {
+	if m != nil {
+		return m.AvailableStartTime
+	}
+	return nil
+}
+
+func (m *CreateNotificationRequest) GetAvailableEndTime() *wrappers.StringValue {
+	if m != nil {
+		return m.AvailableEndTime
+	}
+	return nil
+}
+
+func (m *CreateNotificationRequest) GetExtra() *wrappers.StringValue {
+	if m != nil {
+		return m.Extra
+	}
+	return nil
+}
+
 type CreateNotificationResponse struct {
+	//id of notification created
 	NotificationId       *wrappers.StringValue `protobuf:"bytes,1,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -154,17 +196,37 @@ func (m *CreateNotificationResponse) GetNotificationId() *wrappers.StringValue {
 }
 
 type Notification struct {
-	NotificationId       *wrappers.StringValue `protobuf:"bytes,1,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
-	ContentType          *wrappers.StringValue `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Title                *wrappers.StringValue `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Content              *wrappers.StringValue `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
-	ShortContent         *wrappers.StringValue `protobuf:"bytes,5,opt,name=short_content,json=shortContent,proto3" json:"short_content,omitempty"`
-	ExpiredDays          *wrappers.UInt32Value `protobuf:"bytes,6,opt,name=expired_days,json=expiredDays,proto3" json:"expired_days,omitempty"`
-	Status               *wrappers.StringValue `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
-	CreateTime           *timestamp.Timestamp  `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	StatusTime           *timestamp.Timestamp  `protobuf:"bytes,9,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
-	Owner                *wrappers.StringValue `protobuf:"bytes,10,opt,name=owner,proto3" json:"owner,omitempty"`
-	AddressInfo          *wrappers.StringValue `protobuf:"bytes,11,opt,name=address_info,json=addressInfo,proto3" json:"address_info,omitempty"`
+	//notification id
+	NotificationId *wrappers.StringValue `protobuf:"bytes,1,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
+	//notification content type, eg:[invite|verify|fee|business|alert|other|event]
+	ContentType *wrappers.StringValue `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	//notification title
+	Title *wrappers.StringValue `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	//notification content, json fmt, eg:{"html":"test_content_html", "normal":"test_content_normal"}
+	Content *wrappers.StringValue `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	//notification short content
+	ShortContent *wrappers.StringValue `protobuf:"bytes,5,opt,name=short_content,json=shortContent,proto3" json:"short_content,omitempty"`
+	//notification expired days,  0 is for never expired.
+	ExpiredDays *wrappers.UInt32Value `protobuf:"bytes,6,opt,name=expired_days,json=expiredDays,proto3" json:"expired_days,omitempty"`
+	//notification status, eg:[pending|sending|successful|failed]
+	Status *wrappers.StringValue `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
+	//create time of the notification
+	CreateTime *timestamp.Timestamp `protobuf:"bytes,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	//the status changed time of the notification
+	StatusTime *timestamp.Timestamp `protobuf:"bytes,9,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
+	//the owner of the notification
+	Owner *wrappers.StringValue `protobuf:"bytes,10,opt,name=owner,proto3" json:"owner,omitempty"`
+	//the address to send the notification, json fmt, currently support 2 kinds types.
+	//1.key/value Type, key is the notification send Type,the value is the list of address, eg:{"email": ["openpitrix@163.com", "openpitrix@163.com"],"websocket": ["system", "jo"]}
+	//2.Array Type, eg:["adl-xxxx1", "adl-xxxx2"], the item is the address list id which is already created in advance.
+	AddressInfo *wrappers.StringValue `protobuf:"bytes,11,opt,name=address_info,json=addressInfo,proto3" json:"address_info,omitempty"`
+	//the available start time to receive notification
+	AvailableStartTime *wrappers.StringValue `protobuf:"bytes,12,opt,name=available_start_time,json=availableStartTime,proto3" json:"available_start_time,omitempty"`
+	//the available end time to receive notification
+	AvailableEndTime *wrappers.StringValue `protobuf:"bytes,13,opt,name=available_end_time,json=availableEndTime,proto3" json:"available_end_time,omitempty"`
+	//extra info is only used for websocket notification,to show which websocket client could accept it.
+	//eg:"{"ws_service": "ks","ws_message_type": "event"}"
+	Extra                *wrappers.StringValue `protobuf:"bytes,14,opt,name=extra,proto3" json:"extra,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -272,20 +334,51 @@ func (m *Notification) GetAddressInfo() *wrappers.StringValue {
 	return nil
 }
 
+func (m *Notification) GetAvailableStartTime() *wrappers.StringValue {
+	if m != nil {
+		return m.AvailableStartTime
+	}
+	return nil
+}
+
+func (m *Notification) GetAvailableEndTime() *wrappers.StringValue {
+	if m != nil {
+		return m.AvailableEndTime
+	}
+	return nil
+}
+
+func (m *Notification) GetExtra() *wrappers.StringValue {
+	if m != nil {
+		return m.Extra
+	}
+	return nil
+}
+
 type DescribeNotificationsRequest struct {
-	NotificationId       []string              `protobuf:"bytes,1,rep,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
-	ContentType          []string              `protobuf:"bytes,2,rep,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Owner                []string              `protobuf:"bytes,3,rep,name=owner,proto3" json:"owner,omitempty"`
-	Status               []string              `protobuf:"bytes,4,rep,name=status,proto3" json:"status,omitempty"`
-	Limit                uint32                `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset               uint32                `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
-	SearchWord           *wrappers.StringValue `protobuf:"bytes,7,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
-	SortKey              *wrappers.StringValue `protobuf:"bytes,8,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
-	Reverse              *wrappers.BoolValue   `protobuf:"bytes,9,opt,name=reverse,proto3" json:"reverse,omitempty"`
-	DisplayColumns       []string              `protobuf:"bytes,10,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//notification id
+	NotificationId []string `protobuf:"bytes,1,rep,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
+	//notification content type, eg:[invite|verify|fee|business|alert|other|event]
+	ContentType []string `protobuf:"bytes,2,rep,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	//notification owner
+	Owner []string `protobuf:"bytes,3,rep,name=owner,proto3" json:"owner,omitempty"`
+	//notification status, eg:[pending|sending|successful|failed]
+	Status []string `protobuf:"bytes,4,rep,name=status,proto3" json:"status,omitempty"`
+	//data limit per page, default value 20, max value 200
+	Limit uint32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	//beginning data offset of this page, default 0
+	Offset uint32 `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
+	//query key, support these fields(notification_id,content_type,title,short_content,address_info,status,owner)
+	SearchWord *wrappers.StringValue `protobuf:"bytes,7,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
+	//sort key, order by sort_key, default create_time
+	SortKey *wrappers.StringValue `protobuf:"bytes,8,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
+	//value = 0 sort ASC, value = 1 sort DESC
+	Reverse *wrappers.BoolValue `protobuf:"bytes,9,opt,name=reverse,proto3" json:"reverse,omitempty"`
+	//select columns to display, currently not support
+	DisplayColumns       []string `protobuf:"bytes,10,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *DescribeNotificationsRequest) Reset()         { *m = DescribeNotificationsRequest{} }
@@ -384,7 +477,9 @@ func (m *DescribeNotificationsRequest) GetDisplayColumns() []string {
 }
 
 type DescribeNotificationsResponse struct {
-	TotalCount           uint32          `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//total count of qualified notifications
+	TotalCount uint32 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//list of notification
 	NotificationSet      []*Notification `protobuf:"bytes,2,rep,name=notification_set,json=notificationSet,proto3" json:"notification_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
@@ -431,6 +526,7 @@ func (m *DescribeNotificationsResponse) GetNotificationSet() []*Notification {
 }
 
 type RetryNotificationsRequest struct {
+	//required, notification ids to retry
 	NotificationId       []string `protobuf:"bytes,1,rep,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -470,6 +566,7 @@ func (m *RetryNotificationsRequest) GetNotificationId() []string {
 }
 
 type RetryNotificationsResponse struct {
+	//notifications retried
 	NotificationSet      []*Notification `protobuf:"bytes,1,rep,name=notification_set,json=notificationSet,proto3" json:"notification_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
@@ -509,14 +606,21 @@ func (m *RetryNotificationsResponse) GetNotificationSet() []*Notification {
 }
 
 type Task struct {
-	NotificationId       *wrappers.StringValue `protobuf:"bytes,1,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
-	TaskId               *wrappers.StringValue `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	TaskAction           *wrappers.StringValue `protobuf:"bytes,3,opt,name=task_action,json=taskAction,proto3" json:"task_action,omitempty"`
-	ErrorCode            *wrappers.UInt32Value `protobuf:"bytes,4,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
-	Status               *wrappers.StringValue `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	CreateTime           *timestamp.Timestamp  `protobuf:"bytes,6,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	StatusTime           *timestamp.Timestamp  `protobuf:"bytes,7,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
-	Directive            *wrappers.StringValue `protobuf:"bytes,8,opt,name=directive,proto3" json:"directive,omitempty"`
+	//task id
+	TaskId *wrappers.StringValue `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	//the notification id of the task, one notification may send out by serval tasks
+	NotificationId *wrappers.StringValue `protobuf:"bytes,2,opt,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
+	//error code, if task run failed will return a error code
+	ErrorCode *wrappers.UInt32Value `protobuf:"bytes,3,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
+	//the task execution status, eg:[pending|sending|successful|failed]
+	Status *wrappers.StringValue `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	//create time of the task
+	CreateTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	//the status changed time of the notification
+	StatusTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
+	//the details of notification, json format,
+	//eg:{"Title": "Title_test.", "Address": "openpitrix@163.com", "Content": "{\"html\":\"test_content_html\",  \"normal\":\"test_content_normal\"}", "NotifyType": "email", "ContentType": "other", "ExpiredDays": 0, "ShortContent": "ShortContent_test", "NotificationId": "nf-zZq6G4A7v9YK", "AvailableEndTime": "", "AvailableStartTime": ""}
+	Directive            *wrappers.StringValue `protobuf:"bytes,7,opt,name=directive,proto3" json:"directive,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -547,13 +651,6 @@ func (m *Task) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Task proto.InternalMessageInfo
 
-func (m *Task) GetNotificationId() *wrappers.StringValue {
-	if m != nil {
-		return m.NotificationId
-	}
-	return nil
-}
-
 func (m *Task) GetTaskId() *wrappers.StringValue {
 	if m != nil {
 		return m.TaskId
@@ -561,9 +658,9 @@ func (m *Task) GetTaskId() *wrappers.StringValue {
 	return nil
 }
 
-func (m *Task) GetTaskAction() *wrappers.StringValue {
+func (m *Task) GetNotificationId() *wrappers.StringValue {
 	if m != nil {
-		return m.TaskAction
+		return m.NotificationId
 	}
 	return nil
 }
@@ -604,20 +701,29 @@ func (m *Task) GetDirective() *wrappers.StringValue {
 }
 
 type DescribeTasksRequest struct {
-	NotificationId       []string              `protobuf:"bytes,1,rep,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
-	TaskId               []string              `protobuf:"bytes,2,rep,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	TaskAction           []string              `protobuf:"bytes,3,rep,name=task_action,json=taskAction,proto3" json:"task_action,omitempty"`
-	ErrorCode            []string              `protobuf:"bytes,4,rep,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
-	Status               []string              `protobuf:"bytes,5,rep,name=status,proto3" json:"status,omitempty"`
-	Limit                uint32                `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset               uint32                `protobuf:"varint,7,opt,name=offset,proto3" json:"offset,omitempty"`
-	SearchWord           *wrappers.StringValue `protobuf:"bytes,8,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
-	SortKey              *wrappers.StringValue `protobuf:"bytes,9,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
-	Reverse              *wrappers.BoolValue   `protobuf:"bytes,10,opt,name=reverse,proto3" json:"reverse,omitempty"`
-	DisplayColumns       []string              `protobuf:"bytes,11,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//task id
+	TaskId []string `protobuf:"bytes,1,rep,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	//the notification id of the task, one notification may send out by serval tasks
+	NotificationId []string `protobuf:"bytes,2,rep,name=notification_id,json=notificationId,proto3" json:"notification_id,omitempty"`
+	//error code, if task run failed will return a error code
+	ErrorCode []string `protobuf:"bytes,3,rep,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
+	//the task execution status, eg:[pending|sending|successful|failed]
+	Status []string `protobuf:"bytes,4,rep,name=status,proto3" json:"status,omitempty"`
+	//data limit per page, default value 20, max value 200
+	Limit uint32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	//beginning data offset of this page, default 0
+	Offset uint32 `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
+	//query key, support these fields(task_id,notification_id,status,error_code)
+	SearchWord *wrappers.StringValue `protobuf:"bytes,7,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
+	//sort key, order by sort_key, default create_time
+	SortKey *wrappers.StringValue `protobuf:"bytes,8,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
+	//value = 0 sort ASC, value = 1 sort DESC
+	Reverse *wrappers.BoolValue `protobuf:"bytes,9,opt,name=reverse,proto3" json:"reverse,omitempty"`
+	//select columns to display, currently not support
+	DisplayColumns       []string `protobuf:"bytes,10,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *DescribeTasksRequest) Reset()         { *m = DescribeTasksRequest{} }
@@ -645,13 +751,6 @@ func (m *DescribeTasksRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DescribeTasksRequest proto.InternalMessageInfo
 
-func (m *DescribeTasksRequest) GetNotificationId() []string {
-	if m != nil {
-		return m.NotificationId
-	}
-	return nil
-}
-
 func (m *DescribeTasksRequest) GetTaskId() []string {
 	if m != nil {
 		return m.TaskId
@@ -659,9 +758,9 @@ func (m *DescribeTasksRequest) GetTaskId() []string {
 	return nil
 }
 
-func (m *DescribeTasksRequest) GetTaskAction() []string {
+func (m *DescribeTasksRequest) GetNotificationId() []string {
 	if m != nil {
-		return m.TaskAction
+		return m.NotificationId
 	}
 	return nil
 }
@@ -723,7 +822,9 @@ func (m *DescribeTasksRequest) GetDisplayColumns() []string {
 }
 
 type DescribeTasksResponse struct {
-	TotalCount           uint32   `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//total count of qualified tasks
+	TotalCount uint32 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//list of task
 	TaskSet              []*Task  `protobuf:"bytes,2,rep,name=task_set,json=taskSet,proto3" json:"task_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -770,6 +871,7 @@ func (m *DescribeTasksResponse) GetTaskSet() []*Task {
 }
 
 type RetryTasksRequest struct {
+	//required, task ids to retry
 	TaskId               []string `protobuf:"bytes,1,rep,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -809,6 +911,7 @@ func (m *RetryTasksRequest) GetTaskId() []string {
 }
 
 type RetryTasksResponse struct {
+	//tasks retried
 	TaskSet              []*Task  `protobuf:"bytes,1,rep,name=task_set,json=taskSet,proto3" json:"task_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -848,9 +951,13 @@ func (m *RetryTasksResponse) GetTaskSet() []*Task {
 }
 
 type CreateAddressRequest struct {
-	Address              *wrappers.StringValue `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Remarks              *wrappers.StringValue `protobuf:"bytes,2,opt,name=remarks,proto3" json:"remarks,omitempty"`
-	VerificationCode     *wrappers.StringValue `protobuf:"bytes,3,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	//required, address details, could be email address for email, user id for websocket, mobile number for sms.
+	Address *wrappers.StringValue `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	//remarks for address
+	Remarks *wrappers.StringValue `protobuf:"bytes,2,opt,name=remarks,proto3" json:"remarks,omitempty"`
+	//verification code for register address at the first time
+	VerificationCode *wrappers.StringValue `protobuf:"bytes,3,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	//required, the notification type , eg:[email|websocket|sms|wechat]
 	NotifyType           *wrappers.StringValue `protobuf:"bytes,4,opt,name=notify_type,json=notifyType,proto3" json:"notify_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -911,6 +1018,7 @@ func (m *CreateAddressRequest) GetNotifyType() *wrappers.StringValue {
 }
 
 type CreateAddressResponse struct {
+	//id of address created
 	AddressId            *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -950,20 +1058,31 @@ func (m *CreateAddressResponse) GetAddressId() *wrappers.StringValue {
 }
 
 type DescribeAddressesRequest struct {
-	AddressId            []string              `protobuf:"bytes,1,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
-	AddressListId        []string              `protobuf:"bytes,2,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
-	Address              []string              `protobuf:"bytes,3,rep,name=address,proto3" json:"address,omitempty"`
-	NotifyType           []string              `protobuf:"bytes,4,rep,name=notify_type,json=notifyType,proto3" json:"notify_type,omitempty"`
-	Status               []string              `protobuf:"bytes,5,rep,name=status,proto3" json:"status,omitempty"`
-	Limit                uint32                `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset               uint32                `protobuf:"varint,7,opt,name=offset,proto3" json:"offset,omitempty"`
-	SearchWord           *wrappers.StringValue `protobuf:"bytes,8,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
-	SortKey              *wrappers.StringValue `protobuf:"bytes,9,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
-	Reverse              *wrappers.BoolValue   `protobuf:"bytes,10,opt,name=reverse,proto3" json:"reverse,omitempty"`
-	DisplayColumns       []string              `protobuf:"bytes,11,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//address id
+	AddressId []string `protobuf:"bytes,1,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
+	//address list id
+	AddressListId []string `protobuf:"bytes,2,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
+	//address details, could be email address for email, user id for websocket, mobile number for sms.
+	Address []string `protobuf:"bytes,3,rep,name=address,proto3" json:"address,omitempty"`
+	//the notification type , eg:[email|websocket|sms|wechat]
+	NotifyType []string `protobuf:"bytes,4,rep,name=notify_type,json=notifyType,proto3" json:"notify_type,omitempty"`
+	//address status, eg:[active|disabled|deleted]
+	Status []string `protobuf:"bytes,5,rep,name=status,proto3" json:"status,omitempty"`
+	//data limit per page, default value 20, max value 200
+	Limit uint32 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
+	//beginning data offset of this page, default 0
+	Offset uint32 `protobuf:"varint,7,opt,name=offset,proto3" json:"offset,omitempty"`
+	//query key, support these fields(address_id,address,notify_type,remarks)
+	SearchWord *wrappers.StringValue `protobuf:"bytes,8,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
+	//sort key, order by sort_key, default create_time
+	SortKey *wrappers.StringValue `protobuf:"bytes,9,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
+	//value = 0 sort ASC, value = 1 sort DESC
+	Reverse *wrappers.BoolValue `protobuf:"bytes,10,opt,name=reverse,proto3" json:"reverse,omitempty"`
+	//select columns to display, currently not support
+	DisplayColumns       []string `protobuf:"bytes,11,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *DescribeAddressesRequest) Reset()         { *m = DescribeAddressesRequest{} }
@@ -1069,15 +1188,25 @@ func (m *DescribeAddressesRequest) GetDisplayColumns() []string {
 }
 
 type Address struct {
-	AddressId            *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
-	AddressListId        *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
-	Address              *wrappers.StringValue `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
-	Remarks              *wrappers.StringValue `protobuf:"bytes,4,opt,name=remarks,proto3" json:"remarks,omitempty"`
-	VerificationCode     *wrappers.StringValue `protobuf:"bytes,5,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
-	Status               *wrappers.StringValue `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
-	CreateTime           *timestamp.Timestamp  `protobuf:"bytes,7,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	VerifyTime           *timestamp.Timestamp  `protobuf:"bytes,8,opt,name=verify_time,json=verifyTime,proto3" json:"verify_time,omitempty"`
-	StatusTime           *timestamp.Timestamp  `protobuf:"bytes,9,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
+	//address id
+	AddressId *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
+	//address list id
+	AddressListId *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
+	//address details, could be email address for email, user id for websocket, mobile number for sms.
+	Address *wrappers.StringValue `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+	//remarks for address
+	Remarks *wrappers.StringValue `protobuf:"bytes,4,opt,name=remarks,proto3" json:"remarks,omitempty"`
+	//verification code for register address at the first time
+	VerificationCode *wrappers.StringValue `protobuf:"bytes,5,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	//address status, eg:[active|disabled|deleted]
+	Status *wrappers.StringValue `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	//create time of the address
+	CreateTime *timestamp.Timestamp `protobuf:"bytes,7,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	//verify time when verify the address
+	VerifyTime *timestamp.Timestamp `protobuf:"bytes,8,opt,name=verify_time,json=verifyTime,proto3" json:"verify_time,omitempty"`
+	//the status changed time of the address
+	StatusTime *timestamp.Timestamp `protobuf:"bytes,9,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
+	//the notification type , eg:[email|websocket|sms|wechat]
 	NotifyType           *wrappers.StringValue `protobuf:"bytes,10,opt,name=notify_type,json=notifyType,proto3" json:"notify_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -1180,7 +1309,9 @@ func (m *Address) GetNotifyType() *wrappers.StringValue {
 }
 
 type DescribeAddressesResponse struct {
-	TotalCount           uint32     `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//total count of qualified address
+	TotalCount uint32 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//list of address
 	AddressSet           []*Address `protobuf:"bytes,2,rep,name=address_set,json=addressSet,proto3" json:"address_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
@@ -1227,10 +1358,15 @@ func (m *DescribeAddressesResponse) GetAddressSet() []*Address {
 }
 
 type ModifyAddressRequest struct {
-	AddressId            *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
-	Address              *wrappers.StringValue `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
-	Remarks              *wrappers.StringValue `protobuf:"bytes,3,opt,name=remarks,proto3" json:"remarks,omitempty"`
-	VerificationCode     *wrappers.StringValue `protobuf:"bytes,4,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	//required, address id
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	//address details, could be email address for email, user id for websocket, mobile number for sms.
+	AddressDetail *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_detail,json=addressDetail,proto3" json:"address_detail,omitempty"`
+	//remarks for address
+	Remarks *wrappers.StringValue `protobuf:"bytes,3,opt,name=remarks,proto3" json:"remarks,omitempty"`
+	//verification code for register address at the first time
+	VerificationCode *wrappers.StringValue `protobuf:"bytes,4,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	//the notification type, eg:[email|websocket|sms|wechat]
 	NotifyType           *wrappers.StringValue `protobuf:"bytes,5,opt,name=notify_type,json=notifyType,proto3" json:"notify_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -1262,16 +1398,16 @@ func (m *ModifyAddressRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ModifyAddressRequest proto.InternalMessageInfo
 
-func (m *ModifyAddressRequest) GetAddressId() *wrappers.StringValue {
-	if m != nil {
-		return m.AddressId
-	}
-	return nil
-}
-
-func (m *ModifyAddressRequest) GetAddress() *wrappers.StringValue {
+func (m *ModifyAddressRequest) GetAddress() string {
 	if m != nil {
 		return m.Address
+	}
+	return ""
+}
+
+func (m *ModifyAddressRequest) GetAddressDetail() *wrappers.StringValue {
+	if m != nil {
+		return m.AddressDetail
 	}
 	return nil
 }
@@ -1298,6 +1434,7 @@ func (m *ModifyAddressRequest) GetNotifyType() *wrappers.StringValue {
 }
 
 type ModifyAddressResponse struct {
+	//address id
 	AddressId            *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -1337,6 +1474,7 @@ func (m *ModifyAddressResponse) GetAddressId() *wrappers.StringValue {
 }
 
 type DeleteAddressesRequest struct {
+	//required, address id
 	AddressId            []string `protobuf:"bytes,1,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1376,6 +1514,7 @@ func (m *DeleteAddressesRequest) GetAddressId() []string {
 }
 
 type DeleteAddressesResponse struct {
+	//address id
 	AddressId            []string `protobuf:"bytes,1,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1415,12 +1554,15 @@ func (m *DeleteAddressesResponse) GetAddressId() []string {
 }
 
 type CreateAddressListRequest struct {
-	AddressListName      *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
-	Extra                *wrappers.StringValue `protobuf:"bytes,2,opt,name=extra,proto3" json:"extra,omitempty"`
-	AddressId            []string              `protobuf:"bytes,3,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//the name of the address list
+	AddressListName *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
+	//the extra info of the address
+	Extra *wrappers.StringValue `protobuf:"bytes,2,opt,name=extra,proto3" json:"extra,omitempty"`
+	//required, the address ids for the address list to create
+	AddressId            []string `protobuf:"bytes,3,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *CreateAddressListRequest) Reset()         { *m = CreateAddressListRequest{} }
@@ -1470,6 +1612,7 @@ func (m *CreateAddressListRequest) GetAddressId() []string {
 }
 
 type CreateAddressListResponse struct {
+	//address list id
 	AddressListId        *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -1509,19 +1652,29 @@ func (m *CreateAddressListResponse) GetAddressListId() *wrappers.StringValue {
 }
 
 type DescribeAddressListRequest struct {
-	AddressListId        []string              `protobuf:"bytes,1,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
-	AddressListName      []string              `protobuf:"bytes,2,rep,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
-	Extra                []string              `protobuf:"bytes,3,rep,name=extra,proto3" json:"extra,omitempty"`
-	Status               []string              `protobuf:"bytes,4,rep,name=status,proto3" json:"status,omitempty"`
-	Limit                uint32                `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset               uint32                `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
-	SearchWord           *wrappers.StringValue `protobuf:"bytes,7,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
-	SortKey              *wrappers.StringValue `protobuf:"bytes,8,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
-	Reverse              *wrappers.BoolValue   `protobuf:"bytes,9,opt,name=reverse,proto3" json:"reverse,omitempty"`
-	DisplayColumns       []string              `protobuf:"bytes,10,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//address list id
+	AddressListId []string `protobuf:"bytes,1,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
+	//the name of the address list
+	AddressListName []string `protobuf:"bytes,2,rep,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
+	//the extra info of the address
+	Extra []string `protobuf:"bytes,3,rep,name=extra,proto3" json:"extra,omitempty"`
+	//address list status, eg:[active|disabled|deleted]
+	Status []string `protobuf:"bytes,4,rep,name=status,proto3" json:"status,omitempty"`
+	//data limit per page, default value 20, max value 200
+	Limit uint32 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	//beginning data offset of this page, default 0
+	Offset uint32 `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
+	//query key, support these fields(address_list_id,address_list_name,address_list_name,extra)
+	SearchWord *wrappers.StringValue `protobuf:"bytes,7,opt,name=search_word,json=searchWord,proto3" json:"search_word,omitempty"`
+	//sort key, order by sort_key, default create_time
+	SortKey *wrappers.StringValue `protobuf:"bytes,8,opt,name=sort_key,json=sortKey,proto3" json:"sort_key,omitempty"`
+	//value = 0 sort ASC, value = 1 sort DESC
+	Reverse *wrappers.BoolValue `protobuf:"bytes,9,opt,name=reverse,proto3" json:"reverse,omitempty"`
+	//select columns to display, currently not support
+	DisplayColumns       []string `protobuf:"bytes,10,rep,name=display_columns,json=displayColumns,proto3" json:"display_columns,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *DescribeAddressListRequest) Reset()         { *m = DescribeAddressListRequest{} }
@@ -1620,16 +1773,23 @@ func (m *DescribeAddressListRequest) GetDisplayColumns() []string {
 }
 
 type AddressList struct {
-	AddressListId        *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
-	AddressListName      *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
-	Extra                *wrappers.StringValue `protobuf:"bytes,3,opt,name=extra,proto3" json:"extra,omitempty"`
-	Status               *wrappers.StringValue `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	CreateTime           *timestamp.Timestamp  `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	StatusTime           *timestamp.Timestamp  `protobuf:"bytes,6,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
-	AddressSet           []*Address            `protobuf:"bytes,7,rep,name=address_set,json=addressSet,proto3" json:"address_set,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//address list id
+	AddressListId *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
+	//the name of the address list
+	AddressListName *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
+	//the extra info of the address
+	Extra *wrappers.StringValue `protobuf:"bytes,3,opt,name=extra,proto3" json:"extra,omitempty"`
+	//address list status, eg:[active|disabled|deleted]
+	Status *wrappers.StringValue `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	//create time of the address list
+	CreateTime *timestamp.Timestamp `protobuf:"bytes,5,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	//the status changed time of the address list
+	StatusTime *timestamp.Timestamp `protobuf:"bytes,6,opt,name=status_time,json=statusTime,proto3" json:"status_time,omitempty"`
+	//address list
+	AddressSet           []*Address `protobuf:"bytes,7,rep,name=address_set,json=addressSet,proto3" json:"address_set,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
 }
 
 func (m *AddressList) Reset()         { *m = AddressList{} }
@@ -1707,7 +1867,9 @@ func (m *AddressList) GetAddressSet() []*Address {
 }
 
 type DescribeAddressListResponse struct {
-	TotalCount           uint32         `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//total count of qualified address lists
+	TotalCount uint32 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	//list of address lists
 	AddressListSet       []*AddressList `protobuf:"bytes,2,rep,name=address_list_set,json=addressListSet,proto3" json:"address_list_set,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
@@ -1754,14 +1916,19 @@ func (m *DescribeAddressListResponse) GetAddressListSet() []*AddressList {
 }
 
 type ModifyAddressListRequest struct {
-	AddressListId        *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
-	AddressListName      *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
-	Extra                *wrappers.StringValue `protobuf:"bytes,3,opt,name=extra,proto3" json:"extra,omitempty"`
-	Status               *wrappers.StringValue `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	AddressId            []string              `protobuf:"bytes,5,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	//required, address list id
+	Addresslist string `protobuf:"bytes,1,opt,name=addresslist,proto3" json:"addresslist,omitempty"`
+	//address list name
+	AddressListName *wrappers.StringValue `protobuf:"bytes,2,opt,name=address_list_name,json=addressListName,proto3" json:"address_list_name,omitempty"`
+	//the extra info of the address list
+	Extra *wrappers.StringValue `protobuf:"bytes,3,opt,name=extra,proto3" json:"extra,omitempty"`
+	//address list status, eg:[active|disabled|deleted]
+	Status *wrappers.StringValue `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	//address ids of the address list
+	AddressId            []string `protobuf:"bytes,5,rep,name=address_id,json=addressId,proto3" json:"address_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *ModifyAddressListRequest) Reset()         { *m = ModifyAddressListRequest{} }
@@ -1789,11 +1956,11 @@ func (m *ModifyAddressListRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ModifyAddressListRequest proto.InternalMessageInfo
 
-func (m *ModifyAddressListRequest) GetAddressListId() *wrappers.StringValue {
+func (m *ModifyAddressListRequest) GetAddresslist() string {
 	if m != nil {
-		return m.AddressListId
+		return m.Addresslist
 	}
-	return nil
+	return ""
 }
 
 func (m *ModifyAddressListRequest) GetAddressListName() *wrappers.StringValue {
@@ -1825,6 +1992,7 @@ func (m *ModifyAddressListRequest) GetAddressId() []string {
 }
 
 type ModifyAddressListResponse struct {
+	//address list id
 	AddressListId        *wrappers.StringValue `protobuf:"bytes,1,opt,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -1864,6 +2032,7 @@ func (m *ModifyAddressListResponse) GetAddressListId() *wrappers.StringValue {
 }
 
 type DeleteAddressListRequest struct {
+	//required, address list id
 	AddressListId        []string `protobuf:"bytes,1,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1903,6 +2072,7 @@ func (m *DeleteAddressListRequest) GetAddressListId() []string {
 }
 
 type DeleteAddressListResponse struct {
+	//address list id
 	AddressListId        []string `protobuf:"bytes,1,rep,name=address_list_id,json=addressListId,proto3" json:"address_list_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1942,13 +2112,24 @@ func (m *DeleteAddressListResponse) GetAddressListId() []string {
 }
 
 type EmailServiceConfig struct {
-	Protocol             *wrappers.StringValue `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
-	EmailHost            *wrappers.StringValue `protobuf:"bytes,2,opt,name=email_host,json=emailHost,proto3" json:"email_host,omitempty"`
-	Port                 *wrappers.UInt32Value `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty"`
-	DisplaySender        *wrappers.StringValue `protobuf:"bytes,4,opt,name=display_sender,json=displaySender,proto3" json:"display_sender,omitempty"`
-	Email                *wrappers.StringValue `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
-	Password             *wrappers.StringValue `protobuf:"bytes,6,opt,name=password,proto3" json:"password,omitempty"`
-	SslEnable            *wrappers.BoolValue   `protobuf:"bytes,7,opt,name=ssl_enable,json=sslEnable,proto3" json:"ssl_enable,omitempty"`
+	//email server protocol
+	Protocol *wrappers.StringValue `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
+	//email server host
+	EmailHost *wrappers.StringValue `protobuf:"bytes,2,opt,name=email_host,json=emailHost,proto3" json:"email_host,omitempty"`
+	//email server send port
+	Port *wrappers.UInt32Value `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty"`
+	//notification display sender
+	DisplaySender *wrappers.StringValue `protobuf:"bytes,4,opt,name=display_sender,json=displaySender,proto3" json:"display_sender,omitempty"`
+	//send email address
+	Email *wrappers.StringValue `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
+	//send email address password
+	Password *wrappers.StringValue `protobuf:"bytes,6,opt,name=password,proto3" json:"password,omitempty"`
+	// is ssl enabled or not
+	SslEnable *wrappers.BoolValue `protobuf:"bytes,7,opt,name=ssl_enable,json=sslEnable,proto3" json:"ssl_enable,omitempty"`
+	// icon in validation email
+	ValidationIcon *wrappers.StringValue `protobuf:"bytes,8,opt,name=validation_icon,json=validationIcon,proto3" json:"validation_icon,omitempty"`
+	// email title for validation email
+	ValidationTitle      *wrappers.StringValue `protobuf:"bytes,9,opt,name=validation_title,json=validationTitle,proto3" json:"validation_title,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
 	XXX_sizecache        int32                 `json:"-"`
@@ -2028,7 +2209,22 @@ func (m *EmailServiceConfig) GetSslEnable() *wrappers.BoolValue {
 	return nil
 }
 
+func (m *EmailServiceConfig) GetValidationIcon() *wrappers.StringValue {
+	if m != nil {
+		return m.ValidationIcon
+	}
+	return nil
+}
+
+func (m *EmailServiceConfig) GetValidationTitle() *wrappers.StringValue {
+	if m != nil {
+		return m.ValidationTitle
+	}
+	return nil
+}
+
 type ServiceConfig struct {
+	//email service config information
 	EmailServiceConfig   *EmailServiceConfig `protobuf:"bytes,1,opt,name=email_service_config,json=emailServiceConfig,proto3" json:"email_service_config,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
@@ -2068,6 +2264,7 @@ func (m *ServiceConfig) GetEmailServiceConfig() *EmailServiceConfig {
 }
 
 type SetServiceConfigResponse struct {
+	//set service config successfully or not
 	IsSucc               *wrappers.BoolValue `protobuf:"bytes,1,opt,name=is_succ,json=isSucc,proto3" json:"is_succ,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
@@ -2107,6 +2304,7 @@ func (m *SetServiceConfigResponse) GetIsSucc() *wrappers.BoolValue {
 }
 
 type GetServiceConfigRequest struct {
+	//required, service type
 	ServiceType          []string `protobuf:"bytes,1,rep,name=service_type,json=serviceType,proto3" json:"service_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2146,6 +2344,7 @@ func (m *GetServiceConfigRequest) GetServiceType() []string {
 }
 
 type ValidateEmailServiceResponse struct {
+	//validate service config ok or not
 	IsSucc               *wrappers.BoolValue `protobuf:"bytes,1,opt,name=is_succ,json=isSucc,proto3" json:"is_succ,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
@@ -2180,6 +2379,218 @@ var xxx_messageInfo_ValidateEmailServiceResponse proto.InternalMessageInfo
 func (m *ValidateEmailServiceResponse) GetIsSucc() *wrappers.BoolValue {
 	if m != nil {
 		return m.IsSucc
+	}
+	return nil
+}
+
+type StreamReqData struct {
+	Service              *wrappers.StringValue `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *StreamReqData) Reset()         { *m = StreamReqData{} }
+func (m *StreamReqData) String() string { return proto.CompactTextString(m) }
+func (*StreamReqData) ProtoMessage()    {}
+func (*StreamReqData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_736a457d4a5efa07, []int{35}
+}
+
+func (m *StreamReqData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StreamReqData.Unmarshal(m, b)
+}
+func (m *StreamReqData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StreamReqData.Marshal(b, m, deterministic)
+}
+func (m *StreamReqData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamReqData.Merge(m, src)
+}
+func (m *StreamReqData) XXX_Size() int {
+	return xxx_messageInfo_StreamReqData.Size(m)
+}
+func (m *StreamReqData) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamReqData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamReqData proto.InternalMessageInfo
+
+func (m *StreamReqData) GetService() *wrappers.StringValue {
+	if m != nil {
+		return m.Service
+	}
+	return nil
+}
+
+type StreamRespData struct {
+	UserMsg              *UserMessage `protobuf:"bytes,1,opt,name=user_msg,json=userMsg,proto3" json:"user_msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *StreamRespData) Reset()         { *m = StreamRespData{} }
+func (m *StreamRespData) String() string { return proto.CompactTextString(m) }
+func (*StreamRespData) ProtoMessage()    {}
+func (*StreamRespData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_736a457d4a5efa07, []int{36}
+}
+
+func (m *StreamRespData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StreamRespData.Unmarshal(m, b)
+}
+func (m *StreamRespData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StreamRespData.Marshal(b, m, deterministic)
+}
+func (m *StreamRespData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StreamRespData.Merge(m, src)
+}
+func (m *StreamRespData) XXX_Size() int {
+	return xxx_messageInfo_StreamRespData.Size(m)
+}
+func (m *StreamRespData) XXX_DiscardUnknown() {
+	xxx_messageInfo_StreamRespData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StreamRespData proto.InternalMessageInfo
+
+func (m *StreamRespData) GetUserMsg() *UserMessage {
+	if m != nil {
+		return m.UserMsg
+	}
+	return nil
+}
+
+type UserMessage struct {
+	UserId               *wrappers.StringValue `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Service              *wrappers.StringValue `protobuf:"bytes,2,opt,name=service,proto3" json:"service,omitempty"`
+	MessageType          *wrappers.StringValue `protobuf:"bytes,3,opt,name=message_type,json=messageType,proto3" json:"message_type,omitempty"`
+	MsgDetail            *MessageDetail        `protobuf:"bytes,4,opt,name=msg_detail,json=msgDetail,proto3" json:"msg_detail,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *UserMessage) Reset()         { *m = UserMessage{} }
+func (m *UserMessage) String() string { return proto.CompactTextString(m) }
+func (*UserMessage) ProtoMessage()    {}
+func (*UserMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_736a457d4a5efa07, []int{37}
+}
+
+func (m *UserMessage) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UserMessage.Unmarshal(m, b)
+}
+func (m *UserMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UserMessage.Marshal(b, m, deterministic)
+}
+func (m *UserMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserMessage.Merge(m, src)
+}
+func (m *UserMessage) XXX_Size() int {
+	return xxx_messageInfo_UserMessage.Size(m)
+}
+func (m *UserMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_UserMessage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UserMessage proto.InternalMessageInfo
+
+func (m *UserMessage) GetUserId() *wrappers.StringValue {
+	if m != nil {
+		return m.UserId
+	}
+	return nil
+}
+
+func (m *UserMessage) GetService() *wrappers.StringValue {
+	if m != nil {
+		return m.Service
+	}
+	return nil
+}
+
+func (m *UserMessage) GetMessageType() *wrappers.StringValue {
+	if m != nil {
+		return m.MessageType
+	}
+	return nil
+}
+
+func (m *UserMessage) GetMsgDetail() *MessageDetail {
+	if m != nil {
+		return m.MsgDetail
+	}
+	return nil
+}
+
+type MessageDetail struct {
+	MessageId            *wrappers.StringValue `protobuf:"bytes,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	UserId               *wrappers.StringValue `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Service              *wrappers.StringValue `protobuf:"bytes,3,opt,name=service,proto3" json:"service,omitempty"`
+	MessageType          *wrappers.StringValue `protobuf:"bytes,4,opt,name=message_type,json=messageType,proto3" json:"message_type,omitempty"`
+	MessageContent       *wrappers.StringValue `protobuf:"bytes,5,opt,name=message_content,json=messageContent,proto3" json:"message_content,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *MessageDetail) Reset()         { *m = MessageDetail{} }
+func (m *MessageDetail) String() string { return proto.CompactTextString(m) }
+func (*MessageDetail) ProtoMessage()    {}
+func (*MessageDetail) Descriptor() ([]byte, []int) {
+	return fileDescriptor_736a457d4a5efa07, []int{38}
+}
+
+func (m *MessageDetail) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MessageDetail.Unmarshal(m, b)
+}
+func (m *MessageDetail) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MessageDetail.Marshal(b, m, deterministic)
+}
+func (m *MessageDetail) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessageDetail.Merge(m, src)
+}
+func (m *MessageDetail) XXX_Size() int {
+	return xxx_messageInfo_MessageDetail.Size(m)
+}
+func (m *MessageDetail) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessageDetail.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessageDetail proto.InternalMessageInfo
+
+func (m *MessageDetail) GetMessageId() *wrappers.StringValue {
+	if m != nil {
+		return m.MessageId
+	}
+	return nil
+}
+
+func (m *MessageDetail) GetUserId() *wrappers.StringValue {
+	if m != nil {
+		return m.UserId
+	}
+	return nil
+}
+
+func (m *MessageDetail) GetService() *wrappers.StringValue {
+	if m != nil {
+		return m.Service
+	}
+	return nil
+}
+
+func (m *MessageDetail) GetMessageType() *wrappers.StringValue {
+	if m != nil {
+		return m.MessageType
+	}
+	return nil
+}
+
+func (m *MessageDetail) GetMessageContent() *wrappers.StringValue {
+	if m != nil {
+		return m.MessageContent
 	}
 	return nil
 }
@@ -2220,145 +2631,171 @@ func init() {
 	proto.RegisterType((*SetServiceConfigResponse)(nil), "pb.SetServiceConfigResponse")
 	proto.RegisterType((*GetServiceConfigRequest)(nil), "pb.GetServiceConfigRequest")
 	proto.RegisterType((*ValidateEmailServiceResponse)(nil), "pb.ValidateEmailServiceResponse")
+	proto.RegisterType((*StreamReqData)(nil), "pb.StreamReqData")
+	proto.RegisterType((*StreamRespData)(nil), "pb.StreamRespData")
+	proto.RegisterType((*UserMessage)(nil), "pb.UserMessage")
+	proto.RegisterType((*MessageDetail)(nil), "pb.MessageDetail")
 }
 
 func init() { proto.RegisterFile("notification.proto", fileDescriptor_736a457d4a5efa07) }
 
 var fileDescriptor_736a457d4a5efa07 = []byte{
-	// 2128 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x59, 0x4f, 0x6f, 0x23, 0x49,
-	0x15, 0x57, 0xdb, 0xb1, 0x9d, 0x3c, 0xc7, 0x93, 0xa4, 0xc6, 0x49, 0x1c, 0x4f, 0xfe, 0x4d, 0x2f,
-	0x5a, 0x86, 0x68, 0x26, 0x81, 0xcc, 0x30, 0x7f, 0x59, 0x2d, 0xde, 0x64, 0xc4, 0x44, 0x2c, 0x83,
-	0xe4, 0x0c, 0x8b, 0xf6, 0x80, 0xac, 0x4e, 0x77, 0xc5, 0xd3, 0x8c, 0xd3, 0x6d, 0xba, 0xca, 0xc9,
-	0xf8, 0xb0, 0x17, 0x24, 0x0e, 0x70, 0x61, 0xc9, 0x5c, 0x90, 0x10, 0x27, 0x8e, 0x7b, 0xe0, 0x80,
-	0x10, 0xe2, 0xc8, 0x07, 0xe0, 0xc4, 0x57, 0x40, 0xe2, 0xc2, 0x8d, 0x2f, 0x80, 0xea, 0x4f, 0xdb,
-	0xd5, 0xdd, 0xd5, 0x4e, 0xdb, 0xce, 0x6d, 0xe7, 0x64, 0xb9, 0xea, 0xbd, 0x57, 0xbf, 0x7a, 0xef,
-	0xd5, 0xef, 0xbd, 0xaa, 0x06, 0xe4, 0xf9, 0xd4, 0x3d, 0x75, 0x6d, 0x8b, 0xba, 0xbe, 0xb7, 0xdb,
-	0x0d, 0x7c, 0xea, 0xa3, 0x5c, 0xf7, 0xa4, 0xbe, 0xde, 0xf6, 0xfd, 0x76, 0x07, 0xef, 0x59, 0x5d,
-	0x77, 0xcf, 0xf2, 0x3c, 0x9f, 0x72, 0x01, 0x22, 0x24, 0xea, 0x9b, 0x72, 0x96, 0xff, 0x3b, 0xe9,
-	0x9d, 0xee, 0x5d, 0x04, 0x56, 0xb7, 0x8b, 0x83, 0x70, 0xfe, 0x2e, 0xff, 0xb1, 0xef, 0xb5, 0xb1,
-	0x77, 0x8f, 0x5c, 0x58, 0xed, 0x36, 0x0e, 0xf6, 0xfc, 0x2e, 0xb7, 0xa0, 0xb1, 0xb6, 0x15, 0xb7,
-	0x46, 0xdd, 0x33, 0x4c, 0xa8, 0x75, 0xd6, 0x15, 0x02, 0xe6, 0x3f, 0xf2, 0xb0, 0x76, 0x10, 0x60,
-	0x8b, 0xe2, 0x97, 0x0a, 0xda, 0x26, 0xfe, 0x45, 0x0f, 0x13, 0x8a, 0x3e, 0x86, 0x79, 0xdb, 0xf7,
-	0x28, 0xf6, 0x68, 0x8b, 0xf6, 0xbb, 0xb8, 0x66, 0x6c, 0x1b, 0x77, 0xca, 0xfb, 0xeb, 0xbb, 0xc2,
-	0xea, 0x6e, 0x68, 0x75, 0xf7, 0x98, 0x06, 0xae, 0xd7, 0xfe, 0xcc, 0xea, 0xf4, 0x70, 0xb3, 0x2c,
-	0x35, 0x5e, 0xf5, 0xbb, 0x18, 0xed, 0x43, 0x81, 0xba, 0xb4, 0x83, 0x6b, 0xb9, 0x0c, 0x9a, 0x42,
-	0x14, 0x3d, 0x84, 0x92, 0x34, 0x51, 0xcb, 0x67, 0xd0, 0x0a, 0x85, 0x51, 0x03, 0x2a, 0xe4, 0xb5,
-	0x1f, 0xd0, 0x56, 0xa8, 0x3d, 0x93, 0x41, 0x7b, 0x9e, 0xab, 0x1c, 0x48, 0x13, 0x1f, 0xc3, 0x3c,
-	0x7e, 0xdb, 0x75, 0x03, 0xec, 0xb4, 0x1c, 0xab, 0x4f, 0x6a, 0x85, 0x14, 0x0b, 0x3f, 0x39, 0xf2,
-	0xe8, 0xfd, 0x7d, 0xb9, 0x5f, 0xa9, 0x71, 0x68, 0xf5, 0x09, 0xdb, 0xaf, 0x7f, 0xe1, 0xe1, 0xa0,
-	0x56, 0xcc, 0xb2, 0x5f, 0x2e, 0xca, 0x16, 0xb5, 0x1c, 0x27, 0xc0, 0x84, 0xb4, 0x5c, 0xef, 0xd4,
-	0xaf, 0x95, 0xb2, 0x38, 0x59, 0x6a, 0x1c, 0x79, 0xa7, 0xbe, 0x69, 0x43, 0x5d, 0x17, 0x42, 0xd2,
-	0xf5, 0x3d, 0x82, 0xd1, 0x73, 0x58, 0x50, 0x13, 0xb1, 0xe5, 0x3a, 0x99, 0xc2, 0x78, 0x43, 0x55,
-	0x3a, 0x72, 0xcc, 0xaf, 0x0a, 0x30, 0xaf, 0xda, 0xbf, 0x26, 0xbb, 0x89, 0x14, 0xcb, 0x4d, 0x9c,
-	0x62, 0xf9, 0x89, 0x52, 0x6c, 0x66, 0xaa, 0x14, 0x2b, 0x4c, 0x9d, 0x62, 0xc5, 0x71, 0x53, 0xec,
-	0x01, 0x14, 0x09, 0xb5, 0x68, 0x8f, 0x64, 0x4a, 0x14, 0x29, 0x8b, 0x9e, 0x41, 0xd9, 0xe6, 0x39,
-	0xd2, 0x62, 0x0c, 0x50, 0x9b, 0xe5, 0xaa, 0xf5, 0x84, 0xea, 0xab, 0x90, 0x1e, 0x9a, 0x20, 0xc4,
-	0xd9, 0x00, 0x53, 0x16, 0x66, 0x84, 0xf2, 0xdc, 0xd5, 0xca, 0x42, 0x9c, 0x2b, 0x0f, 0x8e, 0x04,
-	0x4c, 0x7e, 0x24, 0xca, 0xe3, 0x1e, 0x89, 0x3f, 0xe6, 0x61, 0xfd, 0x10, 0x13, 0x3b, 0x70, 0x4f,
-	0x22, 0xa7, 0x82, 0x84, 0xcc, 0xf6, 0x4d, 0x5d, 0xf6, 0xe6, 0xef, 0xcc, 0x25, 0xf2, 0xf3, 0x76,
-	0x22, 0x3f, 0x99, 0x54, 0x24, 0x03, 0xab, 0xe1, 0x0e, 0xf3, 0x7c, 0x4e, 0xee, 0x61, 0x65, 0x10,
-	0xa7, 0x19, 0x3e, 0x1c, 0x46, 0xa2, 0x0a, 0x85, 0x8e, 0x7b, 0xe6, 0x8a, 0xdc, 0xa9, 0x34, 0xc5,
-	0x1f, 0x26, 0xed, 0x9f, 0x9e, 0x12, 0x4c, 0x79, 0x42, 0x54, 0x9a, 0xf2, 0x1f, 0xfa, 0x08, 0xca,
-	0x04, 0x5b, 0x81, 0xfd, 0xba, 0x75, 0xe1, 0x07, 0x4e, 0xa6, 0x90, 0x83, 0x50, 0xf8, 0xa9, 0x1f,
-	0x38, 0xe8, 0x11, 0xcc, 0x12, 0x96, 0xaf, 0x6f, 0x70, 0x5f, 0xc6, 0xfc, 0x8a, 0x4c, 0x67, 0xd2,
-	0x3f, 0xc4, 0x7d, 0xf4, 0x00, 0x4a, 0x01, 0x3e, 0xc7, 0x01, 0x49, 0x0f, 0xf7, 0x27, 0xbe, 0xdf,
-	0x91, 0x5a, 0x52, 0x94, 0x79, 0xd5, 0x71, 0x49, 0xb7, 0x63, 0xf5, 0x5b, 0xb6, 0xdf, 0xe9, 0x9d,
-	0x79, 0xa4, 0x06, 0xc2, 0xab, 0x72, 0xf8, 0x40, 0x8c, 0x9a, 0x5f, 0xc0, 0x46, 0x4a, 0x78, 0x24,
-	0x6b, 0x6d, 0x41, 0x99, 0xfa, 0xd4, 0xea, 0xb4, 0x6c, 0xbf, 0xe7, 0x51, 0xce, 0x2c, 0x95, 0x26,
-	0xf0, 0xa1, 0x03, 0x36, 0x82, 0x9e, 0xc1, 0x62, 0x24, 0x80, 0xcc, 0x75, 0x2c, 0x36, 0xe5, 0xfd,
-	0xc5, 0xdd, 0xee, 0xc9, 0x6e, 0x84, 0x0a, 0x23, 0xa1, 0x3e, 0xc6, 0xd4, 0x3c, 0x84, 0xb5, 0x26,
-	0xa6, 0x41, 0x7f, 0xaa, 0xd4, 0x30, 0x3f, 0x87, 0xba, 0xce, 0x8a, 0xdc, 0x81, 0x0e, 0xa0, 0x91,
-	0x15, 0xe0, 0x7f, 0xf3, 0x30, 0xf3, 0xca, 0x22, 0x6f, 0xae, 0x8b, 0x65, 0xbf, 0x0b, 0x25, 0x6a,
-	0x91, 0x37, 0x4c, 0x3d, 0x0b, 0xc1, 0x16, 0x99, 0xf0, 0x91, 0xc3, 0xb2, 0x8f, 0xab, 0x59, 0x36,
-	0xb3, 0x93, 0x89, 0x61, 0x81, 0x29, 0x34, 0xb8, 0x3c, 0x7a, 0x06, 0x80, 0x83, 0xc0, 0x0f, 0x5a,
-	0xb6, 0xef, 0xe0, 0x54, 0xa6, 0x55, 0x99, 0x6e, 0x8e, 0xcb, 0x1f, 0xf8, 0x0e, 0x56, 0x78, 0xae,
-	0x30, 0x39, 0xcf, 0x15, 0xa7, 0xe1, 0xb9, 0xd2, 0x58, 0x3c, 0xf7, 0x14, 0xe6, 0x1c, 0x37, 0xc0,
-	0x36, 0x75, 0xcf, 0x71, 0xa6, 0xb3, 0x36, 0x14, 0x37, 0xff, 0x9a, 0x87, 0x6a, 0x78, 0x1e, 0x58,
-	0xd8, 0xc7, 0xa7, 0xa9, 0x55, 0x35, 0xc0, 0x9c, 0x6e, 0x64, 0x08, 0xb7, 0xe2, 0x21, 0x64, 0x93,
-	0x6a, 0x90, 0x36, 0x62, 0x41, 0x62, 0xf3, 0x4a, 0x18, 0x56, 0x94, 0x30, 0x68, 0x69, 0xac, 0xa8,
-	0xa7, 0xb1, 0xd2, 0x28, 0x1a, 0x9b, 0x9d, 0x82, 0xc6, 0xe6, 0x26, 0xa4, 0x31, 0x98, 0x8a, 0xc6,
-	0xca, 0x5a, 0x1a, 0xfb, 0x19, 0x2c, 0xc7, 0xc2, 0x96, 0x95, 0xbe, 0x3e, 0x80, 0x59, 0x1e, 0x96,
-	0x21, 0x6d, 0xcd, 0x32, 0x56, 0x60, 0x56, 0x9a, 0x3c, 0x92, 0x8c, 0x05, 0xee, 0xc2, 0x12, 0x27,
-	0x98, 0x48, 0x4a, 0x28, 0x91, 0x36, 0xd4, 0x48, 0x9b, 0x4f, 0x00, 0xa9, 0xd2, 0x12, 0x89, 0xba,
-	0x90, 0x91, 0xb6, 0xd0, 0x97, 0x39, 0xa8, 0x8a, 0x16, 0xb2, 0x21, 0x8a, 0x68, 0xb8, 0xd8, 0x43,
-	0x28, 0xc9, 0xb2, 0x9a, 0x89, 0x76, 0x42, 0x61, 0xa6, 0x17, 0xe0, 0x33, 0x2b, 0x78, 0x43, 0x32,
-	0xf1, 0x4d, 0x28, 0x8c, 0x8e, 0x60, 0xe9, 0x1c, 0x07, 0xc3, 0x7c, 0xe7, 0x39, 0x99, 0x85, 0x76,
-	0x16, 0x55, 0x35, 0x9e, 0xb8, 0x1f, 0x41, 0x99, 0x9f, 0x91, 0xbe, 0xa8, 0xdb, 0x59, 0xfa, 0x3c,
-	0x10, 0x0a, 0xac, 0xa8, 0x9b, 0xaf, 0x60, 0x39, 0xe6, 0x91, 0x01, 0xaf, 0xc3, 0xa0, 0x37, 0xc9,
-	0x46, 0xc6, 0x73, 0x61, 0x67, 0xe2, 0x98, 0x7f, 0xcf, 0x43, 0x2d, 0xcc, 0x18, 0x69, 0x18, 0x0f,
-	0x9c, 0xbd, 0x11, 0xb3, 0xcc, 0x4f, 0xe2, 0x40, 0x17, 0x7d, 0x08, 0x0b, 0xe1, 0x74, 0xc7, 0x25,
-	0x74, 0x78, 0xd4, 0x2b, 0x72, 0xf8, 0x53, 0x97, 0xd0, 0x23, 0x07, 0xd5, 0x86, 0x31, 0x13, 0xa7,
-	0x7d, 0x10, 0x95, 0xad, 0xb8, 0x4b, 0x38, 0x17, 0x0c, 0x37, 0xfd, 0xfe, 0xb0, 0x8f, 0x3a, 0xec,
-	0xff, 0x9b, 0x81, 0x92, 0x8c, 0xd9, 0x54, 0x49, 0x80, 0x0e, 0x75, 0x81, 0xbc, 0xda, 0x42, 0x2c,
-	0xcc, 0x0f, 0xd5, 0x30, 0x4f, 0x76, 0x34, 0x67, 0xa6, 0x3e, 0x9a, 0x85, 0x89, 0x8e, 0xe6, 0xb0,
-	0xb4, 0x17, 0x27, 0x2f, 0xed, 0xa5, 0x71, 0x4b, 0x3b, 0x87, 0xd1, 0xcf, 0x7c, 0xff, 0x11, 0xe2,
-	0xd3, 0xdf, 0x7f, 0x62, 0x3c, 0x04, 0x63, 0xf2, 0xd0, 0xcf, 0x61, 0x4d, 0x43, 0x18, 0x59, 0xcb,
-	0xcc, 0x5d, 0x08, 0xaf, 0x45, 0x4a, 0xa5, 0x29, 0xb3, 0x02, 0x10, 0xd2, 0x5a, 0x98, 0xc7, 0xac,
-	0x0c, 0xfc, 0x33, 0x07, 0xd5, 0x1f, 0xf9, 0x8e, 0x7b, 0xda, 0x8f, 0x95, 0x81, 0xa9, 0xd2, 0x5d,
-	0x49, 0xd4, 0xdc, 0x84, 0x89, 0x9a, 0x9f, 0x3a, 0x51, 0x67, 0xae, 0xa3, 0x86, 0x14, 0xc6, 0xaf,
-	0x21, 0x31, 0x77, 0x5e, 0x47, 0x0d, 0x79, 0x04, 0x2b, 0x87, 0xb8, 0x83, 0xe9, 0xb8, 0x05, 0xc4,
-	0x7c, 0x0c, 0xab, 0x09, 0x45, 0x09, 0xe8, 0x0a, 0xcd, 0xbf, 0x19, 0x50, 0x8b, 0x54, 0x43, 0xc6,
-	0x41, 0xe1, 0xaa, 0x2f, 0x60, 0x29, 0x42, 0x67, 0x9e, 0x75, 0x96, 0xed, 0xa5, 0x70, 0x41, 0x21,
-	0xb4, 0x97, 0x96, 0x78, 0x2a, 0xc0, 0x6f, 0x69, 0x60, 0x65, 0x7b, 0x2d, 0xe4, 0xa2, 0x31, 0xe4,
-	0xf9, 0x38, 0x72, 0x2b, 0x7c, 0xde, 0x8c, 0x00, 0x97, 0xbb, 0xd6, 0x10, 0xb1, 0x31, 0x36, 0x11,
-	0x9b, 0x7f, 0xca, 0x43, 0x3d, 0x76, 0x44, 0x55, 0xf7, 0x7c, 0xa8, 0x5b, 0x44, 0x53, 0xb6, 0x77,
-	0x74, 0x6e, 0x14, 0x05, 0x3e, 0xe1, 0xa8, 0x6a, 0xe8, 0x28, 0xf9, 0xe2, 0x20, 0x5c, 0xf1, 0xfe,
-	0xc5, 0x61, 0xc4, 0x8b, 0xc3, 0x9f, 0xf3, 0x50, 0x56, 0xa2, 0x73, 0x3d, 0xb1, 0xd7, 0xe7, 0x7e,
-	0x6e, 0xaa, 0xdc, 0xcf, 0x67, 0xcf, 0xfd, 0x07, 0x4a, 0xc0, 0x27, 0xae, 0xa3, 0x85, 0x69, 0xae,
-	0xc8, 0xc5, 0xb1, 0x4a, 0x61, 0xac, 0x1a, 0x95, 0x46, 0x57, 0xa3, 0x3e, 0xdc, 0xd2, 0x1e, 0xab,
-	0xac, 0xb5, 0xef, 0x09, 0x2c, 0x46, 0x62, 0x33, 0x2c, 0x80, 0x0b, 0xca, 0x92, 0xdc, 0xe6, 0x0d,
-	0x25, 0x1a, 0x6c, 0xe9, 0xbf, 0xe4, 0xa0, 0x16, 0x61, 0x6e, 0xf5, 0x40, 0x7f, 0x7d, 0x33, 0x27,
-	0xca, 0xb5, 0x05, 0x0d, 0xd7, 0x6a, 0x9c, 0x76, 0xad, 0x5c, 0xfb, 0x09, 0xbb, 0x3e, 0x29, 0x25,
-	0x6c, 0x02, 0xa2, 0x35, 0x0f, 0x58, 0x47, 0x95, 0xb0, 0x21, 0x61, 0x66, 0x35, 0xf2, 0x55, 0x1e,
-	0xd0, 0xf3, 0x33, 0xcb, 0xed, 0x1c, 0xe3, 0xe0, 0xdc, 0xb5, 0xf1, 0x81, 0xef, 0x9d, 0xba, 0x6d,
-	0xf4, 0x18, 0x66, 0xc5, 0xf7, 0x39, 0xbf, 0x93, 0x69, 0x7b, 0x03, 0x69, 0xfe, 0x56, 0xc6, 0xec,
-	0xb5, 0x5e, 0xfb, 0x84, 0x66, 0x4a, 0x84, 0x39, 0x2e, 0xff, 0xc2, 0x27, 0x14, 0x7d, 0x1b, 0x66,
-	0xba, 0x7e, 0x90, 0xfe, 0xbd, 0x4c, 0x7d, 0x62, 0xe3, 0x92, 0xe8, 0x00, 0x42, 0x82, 0x6c, 0x11,
-	0xec, 0x39, 0x38, 0xc8, 0x94, 0x08, 0x15, 0xa9, 0x73, 0xcc, 0x55, 0x78, 0xe6, 0x31, 0x0c, 0x99,
-	0x1a, 0x23, 0x21, 0xca, 0x3d, 0x64, 0x11, 0xc2, 0x6b, 0x4b, 0x31, 0x93, 0x87, 0xa4, 0x34, 0x7a,
-	0x02, 0x40, 0x48, 0xa7, 0x85, 0x3d, 0xeb, 0xa4, 0x93, 0xde, 0xfe, 0x0f, 0x6b, 0xc4, 0x1c, 0x21,
-	0x9d, 0xe7, 0x5c, 0xd8, 0xfc, 0x1c, 0x2a, 0xd1, 0x38, 0xbd, 0x80, 0xaa, 0xf0, 0x36, 0x11, 0xc3,
-	0x2d, 0x9b, 0x8f, 0xcb, 0x98, 0xad, 0x30, 0x7e, 0x48, 0x46, 0xb7, 0x89, 0x70, 0x62, 0xcc, 0xfc,
-	0x31, 0xd4, 0x8e, 0x31, 0x8d, 0xca, 0x85, 0xc9, 0x74, 0x1f, 0x4a, 0x2e, 0x69, 0x91, 0x9e, 0x6d,
-	0x4b, 0xc3, 0xa3, 0xe0, 0x16, 0x5d, 0x72, 0xdc, 0xb3, 0x6d, 0xf3, 0x7b, 0xb0, 0xfa, 0x83, 0x84,
-	0x41, 0x91, 0xe1, 0xb7, 0x61, 0x3e, 0xc4, 0x2b, 0x3f, 0xc7, 0xf2, 0x6f, 0x11, 0x72, 0x8c, 0xb7,
-	0x9c, 0xc7, 0xb0, 0xfe, 0x99, 0xd5, 0x71, 0x1d, 0x8b, 0x62, 0x75, 0x03, 0x53, 0x41, 0xda, 0xff,
-	0xcf, 0x12, 0xcc, 0xab, 0xef, 0x8d, 0xe8, 0xd7, 0x06, 0xa0, 0xe4, 0x27, 0x47, 0xb4, 0xc1, 0xfc,
-	0x96, 0xfa, 0x35, 0xb9, 0xbe, 0x99, 0x36, 0x2d, 0xb0, 0x99, 0x0f, 0x2e, 0x1b, 0xcb, 0xe8, 0xa6,
-	0x28, 0x36, 0xdb, 0xea, 0x7a, 0xbf, 0xfc, 0xd7, 0xbf, 0xdf, 0xe5, 0x56, 0xcc, 0xa5, 0xbd, 0xf3,
-	0xef, 0xec, 0xa9, 0xe3, 0xe4, 0xa9, 0xb1, 0x83, 0x2e, 0x8d, 0xe1, 0x23, 0x5c, 0xe4, 0x25, 0x1e,
-	0x6d, 0xb3, 0xf5, 0x46, 0x7d, 0x05, 0xaa, 0xdf, 0x1e, 0x21, 0x31, 0x04, 0x55, 0x43, 0x2b, 0x8e,
-	0x94, 0x89, 0xc0, 0x22, 0x1c, 0xd7, 0x4d, 0x94, 0xc4, 0x85, 0x7e, 0x6b, 0xc8, 0xc7, 0xb8, 0x28,
-	0x22, 0xee, 0xa0, 0xd4, 0x2f, 0x0f, 0xc2, 0x41, 0xe9, 0x9f, 0x14, 0xcc, 0xa7, 0xdc, 0x41, 0x01,
-	0x13, 0xd0, 0x00, 0x59, 0x37, 0x57, 0x93, 0x0e, 0xe2, 0xc2, 0xcc, 0x4d, 0x6f, 0xa1, 0x12, 0x79,
-	0xaa, 0x44, 0x35, 0x75, 0xef, 0xea, 0x0b, 0x63, 0x7d, 0x4d, 0x33, 0x23, 0x11, 0xec, 0x5f, 0x36,
-	0x16, 0xd1, 0x8d, 0x81, 0x37, 0x28, 0x9b, 0xe4, 0x8b, 0xaf, 0xa1, 0xe4, 0xe2, 0x7b, 0x7c, 0x1a,
-	0xf5, 0x00, 0x86, 0xef, 0x92, 0x68, 0x79, 0xb0, 0xc7, 0xc8, 0x9a, 0x2b, 0xf1, 0x61, 0xb9, 0xe0,
-	0xe3, 0xcb, 0x46, 0x05, 0x95, 0xc5, 0x96, 0x87, 0xab, 0x99, 0xe6, 0x46, 0xca, 0x6a, 0xc3, 0x0d,
-	0x7f, 0x01, 0x95, 0x48, 0xe7, 0x2f, 0x36, 0xac, 0x7b, 0xe5, 0x14, 0x1b, 0xd6, 0xbe, 0xf6, 0x99,
-	0x8f, 0xf8, 0x86, 0x65, 0x4e, 0xca, 0x12, 0xc0, 0x21, 0x6c, 0x9a, 0x6b, 0x49, 0x08, 0x52, 0x80,
-	0x2d, 0xff, 0x1b, 0x03, 0x96, 0x12, 0x17, 0x77, 0xb4, 0xae, 0xba, 0x36, 0x7e, 0x7f, 0xab, 0x6f,
-	0xa4, 0xcc, 0x0e, 0x7d, 0x51, 0x45, 0x68, 0xe0, 0x7c, 0x2b, 0x14, 0xe0, 0x78, 0x6e, 0xa1, 0x74,
-	0x3c, 0xcc, 0x17, 0x91, 0xca, 0x2c, 0x7c, 0xa1, 0xbb, 0xea, 0x0b, 0x5f, 0x68, 0x6f, 0xad, 0xd2,
-	0x17, 0x67, 0x7c, 0x2e, 0xea, 0x8b, 0xfd, 0xd1, 0xbe, 0xf8, 0x95, 0x01, 0x0b, 0xb1, 0x9b, 0x27,
-	0xaa, 0x8b, 0xbd, 0xea, 0xee, 0xb1, 0xf5, 0x5b, 0xda, 0x39, 0x89, 0xe2, 0xc9, 0x65, 0x03, 0xa1,
-	0x45, 0x87, 0xcf, 0xc6, 0x7c, 0xb0, 0xb9, 0x33, 0x1a, 0xc7, 0x3b, 0x03, 0x96, 0x12, 0xb7, 0x41,
-	0x11, 0x93, 0xb4, 0xdb, 0x6d, 0x7d, 0x23, 0x65, 0x56, 0xa2, 0x69, 0xa8, 0x9c, 0x25, 0x97, 0xda,
-	0x66, 0x9d, 0x03, 0x07, 0xf4, 0x81, 0xb9, 0x99, 0x0a, 0x88, 0xf7, 0x17, 0x0c, 0xd5, 0xef, 0x0d,
-	0xb8, 0xa9, 0x69, 0x74, 0xd1, 0xa6, 0x26, 0x1b, 0x54, 0x64, 0x5b, 0xa9, 0xf3, 0x12, 0xdb, 0xf7,
-	0x2f, 0x1b, 0xab, 0x68, 0x39, 0x9e, 0x2f, 0x43, 0x74, 0xdb, 0xe8, 0x0a, 0x74, 0xdc, 0x61, 0x89,
-	0x96, 0x4e, 0x38, 0x2c, 0xad, 0x3d, 0x16, 0x0e, 0x4b, 0xed, 0x03, 0xa5, 0xc3, 0xa2, 0x49, 0xa4,
-	0x38, 0x6c, 0x3f, 0x83, 0xc3, 0xde, 0xf1, 0xa3, 0x15, 0xeb, 0xe0, 0xc2, 0xa3, 0xa5, 0x6f, 0x0e,
-	0xc3, 0xa3, 0x95, 0xd2, 0xf6, 0x49, 0x54, 0xd1, 0xa4, 0x52, 0x50, 0xed, 0x64, 0x40, 0xf5, 0x3b,
-	0x03, 0x16, 0xe3, 0x9d, 0x00, 0x5a, 0x62, 0xcb, 0x46, 0x86, 0xea, 0xeb, 0x62, 0x48, 0xdf, 0x32,
-	0x98, 0x9f, 0x5e, 0x36, 0xea, 0xa8, 0x46, 0x30, 0xdd, 0x96, 0x55, 0x7d, 0x5b, 0x74, 0x26, 0xc1,
-	0xb0, 0x10, 0x7e, 0xcb, 0xfc, 0x46, 0x12, 0x0d, 0xc1, 0x34, 0xd6, 0xcb, 0x30, 0x4c, 0x5f, 0x1a,
-	0xb0, 0x18, 0x6f, 0x26, 0x10, 0x3f, 0x5d, 0x29, 0x2d, 0x46, 0x3d, 0x09, 0x58, 0x42, 0x6a, 0x8f,
-	0x0d, 0xa9, 0xad, 0x85, 0xf4, 0x07, 0x03, 0xaa, 0xba, 0x0e, 0x45, 0xe7, 0x2a, 0x5e, 0xc0, 0x47,
-	0xb5, 0x33, 0xe6, 0x4b, 0x5e, 0x9d, 0xcf, 0xa5, 0xc8, 0x36, 0xef, 0xcf, 0x42, 0x98, 0x1c, 0xd9,
-	0x3d, 0xf3, 0x4e, 0x12, 0x59, 0x28, 0xdf, 0x8a, 0xf4, 0x80, 0x4f, 0x8d, 0x9d, 0x93, 0x22, 0xef,
-	0x82, 0xee, 0xff, 0x3f, 0x00, 0x00, 0xff, 0xff, 0xc5, 0x02, 0xc4, 0x41, 0xbc, 0x27, 0x00, 0x00,
+	// 2479 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x3a, 0xcb, 0x6f, 0x1b, 0xc7,
+	0xf9, 0x3f, 0xbe, 0xa5, 0x8f, 0xa2, 0x1e, 0x13, 0x4a, 0xa2, 0x19, 0xc9, 0xa6, 0x37, 0x3f, 0x24,
+	0x81, 0x60, 0x4b, 0xae, 0xec, 0xf8, 0x6d, 0x18, 0x8c, 0xa4, 0xd8, 0x6a, 0x6b, 0x17, 0xa1, 0x94,
+	0x04, 0x39, 0x14, 0xc4, 0x6a, 0x77, 0x44, 0x6d, 0x4c, 0xee, 0xd2, 0x3b, 0x23, 0x39, 0x44, 0x90,
+	0xb6, 0x28, 0x7a, 0xe9, 0xc9, 0xa9, 0xda, 0x43, 0x2f, 0x45, 0x0b, 0xe4, 0x5c, 0xe4, 0x18, 0x14,
+	0x3d, 0xf6, 0x4f, 0xe8, 0xbf, 0xd0, 0x7b, 0x0f, 0x3d, 0xf6, 0x52, 0xcc, 0x63, 0xc9, 0xd9, 0x07,
+	0x99, 0x21, 0xa9, 0x4b, 0x80, 0x9c, 0x6c, 0xce, 0x7c, 0xaf, 0xf9, 0xde, 0xdf, 0xb7, 0x02, 0xe4,
+	0x7a, 0xd4, 0x39, 0x76, 0x2c, 0x93, 0x3a, 0x9e, 0xbb, 0xd9, 0xf5, 0x3d, 0xea, 0xa1, 0x74, 0xf7,
+	0xa8, 0xba, 0xd6, 0xf2, 0xbc, 0x56, 0x1b, 0x6f, 0x99, 0x5d, 0x67, 0xcb, 0x74, 0x5d, 0x8f, 0x72,
+	0x00, 0x22, 0x20, 0xaa, 0x97, 0xe5, 0x2d, 0xff, 0x75, 0x74, 0x7a, 0xbc, 0xf5, 0xca, 0x37, 0xbb,
+	0x5d, 0xec, 0x07, 0xf7, 0xd7, 0xf8, 0x3f, 0xd6, 0xf5, 0x16, 0x76, 0xaf, 0x93, 0x57, 0x66, 0xab,
+	0x85, 0xfd, 0x2d, 0xaf, 0xcb, 0x29, 0x24, 0x50, 0xbb, 0x12, 0xa5, 0x46, 0x9d, 0x0e, 0x26, 0xd4,
+	0xec, 0x74, 0x05, 0x80, 0xf1, 0xbb, 0x1c, 0x5c, 0xda, 0xf1, 0xb1, 0x49, 0xf1, 0x73, 0x45, 0xda,
+	0x06, 0x7e, 0x79, 0x8a, 0x09, 0x45, 0x8f, 0x61, 0xce, 0xf2, 0x5c, 0x8a, 0x5d, 0xda, 0xa4, 0xbd,
+	0x2e, 0xae, 0xa4, 0x6a, 0xa9, 0x77, 0x8b, 0xdb, 0x6b, 0x9b, 0x82, 0xea, 0x66, 0x40, 0x75, 0xf3,
+	0x80, 0xfa, 0x8e, 0xdb, 0xfa, 0xd8, 0x6c, 0x9f, 0xe2, 0x46, 0x51, 0x62, 0x1c, 0xf6, 0xba, 0x18,
+	0x6d, 0x43, 0x8e, 0x3a, 0xb4, 0x8d, 0x2b, 0x69, 0x0d, 0x4c, 0x01, 0x8a, 0x6e, 0x43, 0x41, 0x92,
+	0xa8, 0x64, 0x34, 0xb0, 0x02, 0x60, 0x54, 0x87, 0x12, 0x39, 0xf1, 0x7c, 0xda, 0x0c, 0xb0, 0xb3,
+	0x1a, 0xd8, 0x73, 0x1c, 0x65, 0x47, 0x92, 0x78, 0x0c, 0x73, 0xf8, 0xf3, 0xae, 0xe3, 0x63, 0xbb,
+	0x69, 0x9b, 0x3d, 0x52, 0xc9, 0x0d, 0xa1, 0xf0, 0xd1, 0xbe, 0x4b, 0x6f, 0x6e, 0xcb, 0xf7, 0x4a,
+	0x8c, 0x5d, 0xb3, 0x47, 0xd8, 0x7b, 0xbd, 0x57, 0x2e, 0xf6, 0x2b, 0x79, 0x9d, 0xf7, 0x72, 0x50,
+	0xc6, 0xd4, 0xb4, 0x6d, 0x1f, 0x13, 0xd2, 0x74, 0xdc, 0x63, 0xaf, 0x52, 0xd0, 0x51, 0xb2, 0xc4,
+	0xd8, 0x77, 0x8f, 0x3d, 0xf4, 0x1c, 0xca, 0xe6, 0x99, 0xe9, 0xb4, 0xcd, 0xa3, 0x36, 0x6e, 0x12,
+	0x6a, 0xfa, 0xb4, 0xc9, 0xcc, 0x5c, 0x99, 0xd1, 0x20, 0x84, 0xfa, 0x98, 0x07, 0x0c, 0xf1, 0xd0,
+	0xe9, 0x60, 0xf4, 0x63, 0x18, 0x9c, 0x36, 0xb1, 0x6b, 0x0b, 0x6a, 0xb3, 0x1a, 0xd4, 0x16, 0xfb,
+	0x78, 0x7b, 0xae, 0xcd, 0x69, 0x6d, 0x43, 0x0e, 0x7f, 0x4e, 0x7d, 0xb3, 0x02, 0x3a, 0x0a, 0xe1,
+	0xa0, 0x86, 0x05, 0xd5, 0x24, 0x97, 0x24, 0x5d, 0xcf, 0x25, 0x18, 0xed, 0xc1, 0x82, 0x1a, 0x58,
+	0x4d, 0xc7, 0xd6, 0x72, 0xcb, 0x79, 0x15, 0x69, 0xdf, 0x36, 0xfe, 0x9b, 0x87, 0x39, 0x95, 0xfe,
+	0x05, 0xd1, 0x8d, 0x85, 0x4c, 0x7a, 0xe2, 0x90, 0xc9, 0x4c, 0x14, 0x32, 0xd9, 0xa9, 0x42, 0x26,
+	0x37, 0x75, 0xc8, 0xe4, 0xc7, 0x0d, 0x99, 0x5b, 0x90, 0x27, 0xd4, 0xa4, 0xa7, 0x44, 0xcb, 0xf1,
+	0x25, 0x2c, 0x7a, 0x00, 0x45, 0x8b, 0xfb, 0x88, 0xea, 0xea, 0xd5, 0x18, 0xea, 0x61, 0x90, 0xee,
+	0x1a, 0x20, 0xc0, 0xb9, 0x53, 0x3e, 0x80, 0xa2, 0x20, 0xa3, 0x7a, 0xf6, 0x48, 0x64, 0x01, 0x1e,
+	0x78, 0xb4, 0x08, 0x71, 0x98, 0x3c, 0xc4, 0x8b, 0x17, 0x15, 0xe2, 0x73, 0x17, 0x1a, 0xe2, 0xa5,
+	0xe9, 0x42, 0x7c, 0x5e, 0x3f, 0xc4, 0xff, 0x94, 0x81, 0xb5, 0x5d, 0x4c, 0x2c, 0xdf, 0x39, 0x0a,
+	0x45, 0x39, 0x09, 0x2a, 0xcf, 0x3b, 0x49, 0xd1, 0x98, 0x79, 0x77, 0x36, 0x16, 0x6f, 0x57, 0x63,
+	0xf1, 0xc6, 0xa0, 0x42, 0x11, 0x55, 0x0e, 0x2c, 0x96, 0xe1, 0x77, 0xd2, 0x26, 0x2b, 0x7d, 0xbf,
+	0xcb, 0xf2, 0xe3, 0xc0, 0xb3, 0xca, 0x90, 0x6b, 0x3b, 0x1d, 0x47, 0xc4, 0x42, 0xa9, 0x21, 0x7e,
+	0x30, 0x68, 0xef, 0xf8, 0x98, 0x60, 0xca, 0x1d, 0xbc, 0xd4, 0x90, 0xbf, 0xd0, 0x23, 0x28, 0x12,
+	0x6c, 0xfa, 0xd6, 0x49, 0xf3, 0x95, 0xe7, 0xdb, 0x5a, 0x2e, 0x0c, 0x02, 0xe1, 0x13, 0xcf, 0xb7,
+	0xd1, 0x1d, 0x98, 0x21, 0x2c, 0xfe, 0x5e, 0xe0, 0x9e, 0x56, 0xba, 0x2e, 0x30, 0xe8, 0x9f, 0xe0,
+	0x1e, 0xba, 0x05, 0x05, 0x1f, 0x9f, 0x61, 0x9f, 0x0c, 0x77, 0xdf, 0xf7, 0x3d, 0xaf, 0x2d, 0xb1,
+	0x24, 0x28, 0xd3, 0xaa, 0xed, 0x90, 0x6e, 0xdb, 0xec, 0x35, 0x2d, 0xaf, 0x7d, 0xda, 0x71, 0x49,
+	0x05, 0x84, 0x56, 0xe5, 0xf1, 0x8e, 0x38, 0x35, 0xbe, 0x84, 0xf5, 0x21, 0xe6, 0x91, 0x59, 0xf8,
+	0x0a, 0x14, 0xa9, 0x47, 0xcd, 0x76, 0xd3, 0xf2, 0x4e, 0x5d, 0xca, 0x33, 0x65, 0xa9, 0x01, 0xfc,
+	0x68, 0x87, 0x9d, 0xa0, 0x07, 0xb0, 0x18, 0x32, 0x20, 0x53, 0x1d, 0xb3, 0x4d, 0x71, 0x7b, 0x71,
+	0xb3, 0x7b, 0xb4, 0x19, 0x4a, 0xed, 0x21, 0x53, 0x1f, 0x60, 0x6a, 0xec, 0xc2, 0xa5, 0x06, 0xa6,
+	0x7e, 0x6f, 0x2a, 0xd7, 0x30, 0x3e, 0x85, 0x6a, 0x12, 0x15, 0xf9, 0x82, 0x24, 0x01, 0x53, 0xba,
+	0x02, 0xfe, 0x35, 0x03, 0xd9, 0x43, 0x93, 0xbc, 0x40, 0xef, 0x41, 0x81, 0x9a, 0xe4, 0x85, 0x6e,
+	0xb5, 0xc8, 0x33, 0xe0, 0x7d, 0x3b, 0xa9, 0xd8, 0xa4, 0x27, 0x28, 0x36, 0x0f, 0x00, 0xb0, 0xef,
+	0x7b, 0x7e, 0xd3, 0xf2, 0xec, 0xe1, 0x05, 0x43, 0x4d, 0xbd, 0xb3, 0x1c, 0x7e, 0xc7, 0xb3, 0xb1,
+	0x92, 0x78, 0xb3, 0x93, 0x27, 0xde, 0xdc, 0x34, 0x89, 0x37, 0x3f, 0x56, 0xe2, 0xbd, 0x0f, 0xb3,
+	0xb6, 0xe3, 0x63, 0x8b, 0x3a, 0x67, 0x58, 0x2b, 0xd0, 0x06, 0xe0, 0xc6, 0x1f, 0x32, 0x50, 0x0e,
+	0x1c, 0x9a, 0xd9, 0xad, 0xef, 0x4c, 0xab, 0xaa, 0xfd, 0x78, 0x1a, 0x90, 0x16, 0x7a, 0x27, 0xc9,
+	0x42, 0x49, 0x09, 0x68, 0x3d, 0x62, 0x03, 0x06, 0xa3, 0x68, 0xf9, 0x87, 0x34, 0x33, 0x22, 0xcd,
+	0xfc, 0x1c, 0x96, 0x23, 0x56, 0xd1, 0x4d, 0x2f, 0x6f, 0xc1, 0x0c, 0xb7, 0xdb, 0x20, 0xad, 0xcc,
+	0xb0, 0xa8, 0x65, 0x54, 0x1a, 0xdc, 0xa2, 0x2c, 0x4a, 0xaf, 0xc1, 0x12, 0x4f, 0x00, 0x5a, 0x16,
+	0x37, 0xee, 0x01, 0x52, 0xa1, 0xa5, 0x24, 0x2a, 0xa3, 0xd4, 0x30, 0x46, 0x5f, 0xa5, 0xa1, 0x2c,
+	0x5a, 0xd6, 0xba, 0x28, 0xda, 0x01, 0xb3, 0xdb, 0x50, 0x90, 0x65, 0x5c, 0x2b, 0x3d, 0x04, 0xc0,
+	0x0c, 0xcf, 0xc7, 0x1d, 0xd3, 0x7f, 0x41, 0xb4, 0xf2, 0x42, 0x00, 0x8c, 0xf6, 0x61, 0xe9, 0x0c,
+	0xfb, 0x03, 0xaf, 0x1d, 0x99, 0x17, 0x42, 0x65, 0x5d, 0x45, 0xe3, 0x8e, 0xfb, 0x08, 0x8a, 0xdc,
+	0xd3, 0x7b, 0xa2, 0xae, 0xea, 0xe4, 0x08, 0x10, 0x08, 0xac, 0xe8, 0x1a, 0x87, 0xb0, 0x1c, 0xd1,
+	0x48, 0x3f, 0xef, 0x42, 0xbf, 0x17, 0xd2, 0x4b, 0x9a, 0xb3, 0x41, 0x27, 0x64, 0x1b, 0x7f, 0xcb,
+	0x40, 0x25, 0xf0, 0x18, 0x49, 0x18, 0xf7, 0x95, 0xbd, 0x1e, 0xa1, 0xcc, 0x23, 0xb1, 0x8f, 0x8b,
+	0xde, 0x86, 0x85, 0xe0, 0xba, 0xed, 0x10, 0x3a, 0x88, 0xe8, 0x92, 0x3c, 0xfe, 0xa9, 0x43, 0xe8,
+	0xbe, 0x8d, 0x2a, 0x03, 0x9b, 0x89, 0x68, 0xee, 0x5b, 0xe5, 0x4a, 0x54, 0x25, 0xec, 0x56, 0x79,
+	0xb4, 0x12, 0xec, 0xb9, 0xe4, 0x60, 0xcf, 0x27, 0x07, 0x7b, 0x61, 0x54, 0xb0, 0xcf, 0x4c, 0x11,
+	0xec, 0xb3, 0x13, 0x06, 0x3b, 0x4c, 0x15, 0xec, 0xc5, 0xc4, 0x60, 0xff, 0x4f, 0x16, 0x0a, 0xd2,
+	0x66, 0x53, 0x39, 0x01, 0xda, 0x4d, 0x32, 0xe4, 0x77, 0x53, 0x88, 0x98, 0xf9, 0xb6, 0x6a, 0xe6,
+	0xc9, 0x42, 0x33, 0x3b, 0x75, 0x68, 0xe6, 0x26, 0x0a, 0xcd, 0x41, 0xe5, 0xce, 0x4f, 0x5e, 0xb9,
+	0x0b, 0xe3, 0x56, 0x6e, 0x2e, 0x46, 0x4f, 0x7b, 0xde, 0x12, 0xe0, 0xd3, 0xcf, 0x5b, 0x91, 0x3c,
+	0x04, 0x63, 0xe6, 0xa1, 0xcf, 0xe0, 0x52, 0x42, 0xc2, 0xd0, 0x2d, 0x33, 0xd7, 0x20, 0x18, 0xc3,
+	0x94, 0x4a, 0x53, 0x64, 0x05, 0x20, 0x48, 0x6b, 0x81, 0x1f, 0xb3, 0x32, 0xf0, 0x6d, 0x1a, 0xca,
+	0xcf, 0x3c, 0xdb, 0x39, 0xee, 0x45, 0xca, 0x40, 0x25, 0x5c, 0x06, 0x94, 0x94, 0xb2, 0x03, 0xf3,
+	0x01, 0x03, 0x1b, 0x53, 0xd3, 0x69, 0x8f, 0xe5, 0xca, 0xbb, 0x1c, 0x45, 0x75, 0xc9, 0xcc, 0xd4,
+	0x2e, 0x99, 0xbd, 0x88, 0x6a, 0x91, 0x1b, 0xbf, 0x5a, 0x44, 0x14, 0x77, 0x11, 0xd5, 0xe2, 0x0e,
+	0xac, 0xec, 0xe2, 0x36, 0xa6, 0xe3, 0x96, 0x0a, 0xe3, 0x2e, 0xac, 0xc6, 0x10, 0xa5, 0x40, 0xdf,
+	0x81, 0xf9, 0x6d, 0x0a, 0x2a, 0xa1, 0xba, 0xc7, 0xb2, 0x4d, 0xc0, 0xf5, 0x29, 0x2c, 0x85, 0x12,
+	0x97, 0x6b, 0x76, 0xf4, 0x76, 0xaa, 0x0b, 0x4a, 0xea, 0x7a, 0x6e, 0xaa, 0x33, 0x77, 0x5a, 0x7b,
+	0xe6, 0x8e, 0x48, 0x9e, 0x89, 0x4a, 0x6e, 0x06, 0x8b, 0xe0, 0x90, 0xe0, 0xf2, 0xd5, 0x09, 0x29,
+	0x37, 0x35, 0x76, 0xca, 0x35, 0xbe, 0xce, 0x40, 0x35, 0x12, 0x8c, 0xaa, 0x7a, 0xde, 0x4e, 0x62,
+	0x92, 0x50, 0xa0, 0x37, 0x92, 0xd4, 0x28, 0x4a, 0x79, 0x4c, 0x51, 0xe5, 0x40, 0x51, 0x72, 0xf6,
+	0x17, 0xaa, 0xf8, 0xa1, 0x29, 0x1f, 0xd1, 0x94, 0x7f, 0x93, 0x81, 0xa2, 0x62, 0x9d, 0x8b, 0xb1,
+	0x7d, 0xb2, 0xef, 0xa7, 0xa7, 0xf2, 0xfd, 0x8c, 0xbe, 0xef, 0x7f, 0xdf, 0x66, 0xdd, 0x48, 0xdd,
+	0x29, 0x8c, 0xae, 0x3b, 0x3d, 0x78, 0x33, 0x31, 0xac, 0x74, 0xab, 0xdc, 0x3d, 0x58, 0x0c, 0xd9,
+	0x66, 0x50, 0xea, 0x16, 0x14, 0x96, 0x9c, 0xe6, 0xbc, 0x62, 0x0d, 0xc6, 0xfa, 0x75, 0x1a, 0x2a,
+	0xa1, 0xcc, 0xad, 0x06, 0x74, 0xad, 0xff, 0x0a, 0x46, 0x56, 0x96, 0x3e, 0xf5, 0xe8, 0x7b, 0xe9,
+	0x15, 0xe1, 0x3c, 0x9a, 0x4b, 0xc8, 0xa3, 0x09, 0x0a, 0xb9, 0xd0, 0x3c, 0xfa, 0x3e, 0x1b, 0x82,
+	0x94, 0xf2, 0x34, 0x41, 0x12, 0x35, 0x76, 0x58, 0x5f, 0x14, 0xa3, 0x21, 0xc5, 0xd4, 0x25, 0xf2,
+	0xf7, 0x2c, 0xa0, 0xbd, 0x8e, 0xe9, 0xb4, 0x0f, 0xb0, 0x7f, 0xe6, 0x58, 0x78, 0xc7, 0x73, 0x8f,
+	0x9d, 0x16, 0xba, 0x0b, 0x33, 0xe2, 0x2b, 0xa5, 0xd7, 0xd6, 0x7a, 0x5e, 0x1f, 0x9a, 0x2f, 0xb4,
+	0x18, 0xbd, 0xe6, 0x89, 0x47, 0xa8, 0x96, 0x23, 0xcc, 0x72, 0xf8, 0xa7, 0x1e, 0xa1, 0xe8, 0x06,
+	0x64, 0xbb, 0x9e, 0x4f, 0xb5, 0xf6, 0x60, 0x1c, 0x92, 0x75, 0x5f, 0x41, 0x4e, 0x24, 0xd8, 0xb5,
+	0xb1, 0xaf, 0xe5, 0x08, 0x25, 0x89, 0x73, 0xc0, 0x51, 0xb8, 0xe7, 0x31, 0x19, 0xb4, 0x9a, 0x1e,
+	0x01, 0xca, 0x35, 0x64, 0x12, 0xc2, 0xeb, 0x46, 0x5e, 0x4b, 0x43, 0x12, 0x1a, 0xdd, 0x03, 0x20,
+	0xa4, 0xdd, 0xc4, 0xae, 0x79, 0xd4, 0x1e, 0xde, 0xc4, 0x0f, 0xf2, 0xff, 0x2c, 0x21, 0xed, 0x3d,
+	0x0e, 0x8c, 0xf6, 0x60, 0xe1, 0xcc, 0x6c, 0x3b, 0xb6, 0x5c, 0x68, 0x59, 0x9e, 0xab, 0x55, 0x77,
+	0xe6, 0x07, 0x48, 0xfb, 0x96, 0xe7, 0xa2, 0x27, 0xb0, 0xa8, 0x90, 0x11, 0xdf, 0xaa, 0x74, 0xe6,
+	0x4c, 0x85, 0xf9, 0x21, 0x43, 0x32, 0x3e, 0x85, 0x52, 0xd8, 0x6f, 0x9e, 0x42, 0x59, 0x58, 0x9f,
+	0x88, 0xe3, 0xa6, 0xc5, 0xcf, 0xa5, 0x0f, 0xad, 0xb0, 0x5c, 0x14, 0xf7, 0xb6, 0x06, 0xc2, 0xb1,
+	0x33, 0xe3, 0x67, 0x50, 0x39, 0xc0, 0x34, 0x0c, 0x17, 0x38, 0xf7, 0x4d, 0x28, 0x38, 0xa4, 0x49,
+	0x4e, 0x2d, 0x4b, 0x12, 0x1e, 0xa5, 0xbe, 0xbc, 0x43, 0x0e, 0x4e, 0x2d, 0xcb, 0x78, 0x08, 0xab,
+	0x4f, 0x62, 0x04, 0x45, 0xc4, 0x5d, 0x85, 0xb9, 0x40, 0x5e, 0xf9, 0x91, 0x9c, 0x7f, 0x81, 0x90,
+	0x67, 0xbc, 0xbd, 0x3d, 0x80, 0xb5, 0x8f, 0xc5, 0xe3, 0xb1, 0xfa, 0x80, 0xe9, 0x44, 0x7a, 0x02,
+	0xa5, 0x03, 0xea, 0x63, 0xb3, 0xd3, 0xc0, 0x2f, 0x77, 0x4d, 0x6a, 0xb2, 0x31, 0x40, 0x32, 0xd5,
+	0x5b, 0x36, 0x49, 0x60, 0xe3, 0x21, 0xcc, 0x07, 0x84, 0x48, 0x97, 0x53, 0xda, 0x80, 0x99, 0x53,
+	0x82, 0xfd, 0x66, 0x87, 0x04, 0xca, 0xe7, 0x85, 0xe0, 0x23, 0x82, 0xfd, 0x67, 0x98, 0x10, 0xb3,
+	0x85, 0x1b, 0x05, 0x06, 0xf0, 0x8c, 0xb4, 0x8c, 0x7f, 0xa7, 0xa0, 0xa8, 0x5c, 0xa0, 0xf7, 0x80,
+	0x5f, 0x69, 0x6f, 0xc4, 0x19, 0xb0, 0x18, 0xc7, 0x03, 0xe1, 0xd3, 0x63, 0x08, 0x8f, 0x1e, 0xc3,
+	0x5c, 0x47, 0x70, 0x16, 0xda, 0xd7, 0x49, 0xff, 0x45, 0x89, 0xc1, 0x77, 0x36, 0x37, 0x00, 0x3a,
+	0xa4, 0x15, 0x4c, 0x5f, 0x22, 0xfe, 0x97, 0xd8, 0x6b, 0xe5, 0x83, 0xc4, 0x8c, 0xd5, 0x98, 0xed,
+	0x90, 0x96, 0xf8, 0xaf, 0xf1, 0x8f, 0x34, 0x94, 0x42, 0x97, 0x2c, 0x6d, 0x05, 0x42, 0xe8, 0x4e,
+	0x29, 0x12, 0x7e, 0xdf, 0x56, 0x15, 0x96, 0x9e, 0x4c, 0x61, 0x99, 0x69, 0x14, 0x96, 0x1d, 0x57,
+	0x61, 0x7b, 0xb0, 0x10, 0x10, 0x18, 0xe7, 0xb3, 0xf1, 0xbc, 0x44, 0x92, 0x1f, 0x8e, 0xb7, 0xff,
+	0x82, 0x60, 0x4e, 0x5d, 0xa5, 0xa3, 0xdf, 0xa6, 0x00, 0xc5, 0xbf, 0xfb, 0xa3, 0x75, 0x66, 0x8b,
+	0xa1, 0x7f, 0xa2, 0x52, 0xbd, 0x3c, 0xec, 0x5a, 0x84, 0x96, 0x71, 0xeb, 0xbc, 0xbe, 0x8c, 0xde,
+	0x10, 0x00, 0x35, 0x95, 0xdf, 0xaf, 0xff, 0xf9, 0xaf, 0xdf, 0xa7, 0x57, 0x8c, 0xa5, 0xad, 0xb3,
+	0x1f, 0x6d, 0xa9, 0xe7, 0xe4, 0x7e, 0x6a, 0x03, 0x9d, 0xa7, 0x06, 0x9b, 0xe9, 0xd0, 0xe7, 0x23,
+	0x54, 0x63, 0xfc, 0x46, 0x7d, 0xba, 0xac, 0x5e, 0x1d, 0x01, 0x31, 0x10, 0xaa, 0x82, 0x56, 0x02,
+	0x98, 0x90, 0x58, 0x84, 0xcb, 0xf5, 0x06, 0x8a, 0xcb, 0x85, 0x5e, 0xa7, 0xe4, 0x86, 0x3a, 0x2c,
+	0x11, 0x57, 0xd0, 0xd0, 0xcf, 0x65, 0x42, 0x41, 0xc3, 0xbf, 0x83, 0x19, 0xf7, 0xb9, 0x82, 0x38,
+	0x40, 0x82, 0x20, 0x6b, 0xc6, 0x6a, 0x4c, 0x90, 0x2d, 0x9f, 0x01, 0x33, 0x35, 0x7d, 0x06, 0xa5,
+	0xd0, 0xfe, 0x1e, 0x55, 0xd4, 0xb7, 0xab, 0x6b, 0xf7, 0xea, 0xa5, 0x84, 0x1b, 0x29, 0xc1, 0xff,
+	0x9f, 0xd7, 0x17, 0xd1, 0x7c, 0x5f, 0x1b, 0x94, 0x5d, 0x72, 0xe6, 0x45, 0x34, 0xcb, 0x98, 0xf3,
+	0x03, 0xd4, 0x02, 0x18, 0xac, 0xe7, 0xd1, 0x72, 0xff, 0x55, 0x21, 0x2e, 0x2b, 0xd1, 0x63, 0xc9,
+	0x62, 0xe3, 0xbc, 0x5e, 0x42, 0x45, 0xf1, 0xc8, 0x01, 0xfd, 0xb2, 0xb1, 0xd0, 0xa7, 0x3f, 0x78,
+	0xd4, 0x2f, 0xa0, 0x14, 0x1a, 0x84, 0xc5, 0xa3, 0x92, 0xd6, 0xfb, 0xe2, 0x51, 0x89, 0x6b, 0x6e,
+	0xe3, 0xee, 0x79, 0x7d, 0x1d, 0xbd, 0x29, 0xfd, 0xce, 0xac, 0xf9, 0xd8, 0x72, 0xba, 0x0e, 0x76,
+	0x69, 0x4d, 0x76, 0x50, 0x9b, 0x5c, 0x02, 0x64, 0x94, 0x98, 0x04, 0x66, 0xb0, 0x66, 0x60, 0xfc,
+	0xbf, 0x4e, 0xc1, 0x52, 0x6c, 0x65, 0x85, 0xd6, 0x54, 0xfd, 0x45, 0xf7, 0x19, 0xd5, 0xf5, 0x21,
+	0xb7, 0x52, 0x98, 0x0f, 0xcf, 0xeb, 0xf7, 0xd0, 0x9d, 0x0f, 0x4f, 0xb1, 0xdf, 0xab, 0x99, 0x35,
+	0xd6, 0xd2, 0xd5, 0xbc, 0xe3, 0x5a, 0x9f, 0x6b, 0x8d, 0x9e, 0x98, 0xb4, 0xd6, 0xc1, 0x98, 0xd6,
+	0xe8, 0x09, 0xae, 0xbd, 0xe4, 0x70, 0x96, 0xef, 0x50, 0xec, 0x3b, 0xa6, 0x10, 0x74, 0x01, 0x85,
+	0x05, 0x45, 0xbf, 0x4a, 0x41, 0x29, 0xd4, 0xe7, 0x0a, 0x35, 0x25, 0xad, 0xbf, 0x84, 0x9a, 0x12,
+	0xf7, 0x3b, 0xd2, 0xfb, 0xc4, 0x5d, 0xcd, 0x73, 0x71, 0x58, 0x3d, 0x6b, 0xd5, 0xd5, 0x10, 0xd7,
+	0xad, 0x2f, 0xe4, 0x7f, 0xbf, 0x64, 0x8a, 0xfa, 0x4d, 0x0a, 0x16, 0x22, 0x6b, 0x1a, 0x54, 0x15,
+	0x8a, 0x48, 0x5a, 0xfa, 0x54, 0xdf, 0x4c, 0xbc, 0x0b, 0xd9, 0x4b, 0xdc, 0x26, 0xe9, 0x48, 0xda,
+	0x6b, 0x23, 0x6e, 0xaf, 0x3f, 0xa7, 0x60, 0x29, 0xb6, 0x39, 0x11, 0xf6, 0x1a, 0xb6, 0x09, 0xaa,
+	0xae, 0x0f, 0xb9, 0x95, 0xc2, 0x3c, 0x3b, 0xaf, 0x6f, 0xa1, 0xeb, 0x7d, 0xe7, 0x89, 0x1b, 0xcc,
+	0x3b, 0xe6, 0x96, 0xea, 0x7b, 0x95, 0x14, 0x6f, 0xd9, 0x58, 0x54, 0xc4, 0x63, 0x68, 0x5c, 0xc2,
+	0x6f, 0x52, 0xf0, 0x46, 0xc2, 0x80, 0x88, 0x2e, 0x27, 0x78, 0x8d, 0x2a, 0xe5, 0x95, 0xa1, 0xf7,
+	0x52, 0xce, 0x4f, 0xce, 0xeb, 0x0f, 0xd1, 0xfd, 0x21, 0x7e, 0xc5, 0xd9, 0x6b, 0xb8, 0x16, 0x42,
+	0x31, 0xa1, 0xd1, 0x1f, 0x53, 0xb0, 0x14, 0x9b, 0xa2, 0x84, 0x4e, 0x87, 0x4d, 0x9b, 0x42, 0xa7,
+	0x43, 0x47, 0x2f, 0xe3, 0x83, 0xf3, 0x7a, 0x15, 0x55, 0xe2, 0x9e, 0xc6, 0xc5, 0x16, 0x92, 0xbc,
+	0x55, 0xbd, 0x1c, 0x95, 0xa4, 0xef, 0x71, 0xec, 0x17, 0xf7, 0xba, 0xd7, 0x3c, 0x3c, 0x23, 0x93,
+	0x53, 0x10, 0x9e, 0xc9, 0x43, 0x59, 0x10, 0x9e, 0x43, 0xc6, 0x2d, 0xe3, 0xd1, 0x79, 0xfd, 0x0a,
+	0x5a, 0x1f, 0xe6, 0x7b, 0x03, 0xf9, 0x96, 0x37, 0x12, 0xcd, 0xfb, 0x4b, 0x58, 0x8c, 0x36, 0xbb,
+	0x88, 0x77, 0x30, 0xa1, 0xa3, 0xea, 0x9a, 0x38, 0x4a, 0xee, 0x8a, 0x59, 0x20, 0x56, 0x11, 0x6b,
+	0x9a, 0x6b, 0xb2, 0x51, 0xa8, 0x89, 0xe6, 0xdb, 0x1f, 0x14, 0xcb, 0x55, 0x03, 0x31, 0xf6, 0xf2,
+	0x5e, 0x5c, 0x73, 0x01, 0xbe, 0x80, 0xc5, 0x68, 0x73, 0x8c, 0x78, 0xb0, 0x0d, 0x69, 0x99, 0xab,
+	0x71, 0xe9, 0x8c, 0x3b, 0x9c, 0xff, 0x93, 0x51, 0xfc, 0xcb, 0x28, 0x81, 0x3f, 0xfa, 0x2a, 0x05,
+	0xe5, 0xa4, 0xe6, 0x3a, 0x49, 0x05, 0xbc, 0x78, 0x8f, 0xea, 0xc4, 0x8d, 0x1d, 0x5e, 0x99, 0x03,
+	0x90, 0x1a, 0x1f, 0x2d, 0x02, 0x89, 0xb8, 0x10, 0x86, 0xb1, 0x1e, 0x17, 0x62, 0x6b, 0x30, 0xda,
+	0x30, 0x7d, 0x7c, 0x90, 0xf4, 0x37, 0xb5, 0x3b, 0x27, 0xa6, 0xeb, 0xe2, 0xb6, 0x14, 0x4b, 0x6d,
+	0xdc, 0xab, 0x48, 0x3d, 0x12, 0x2d, 0xb8, 0xf1, 0x7f, 0x37, 0x52, 0x47, 0x79, 0xde, 0x48, 0xdd,
+	0xfc, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x66, 0xed, 0xea, 0xf3, 0x4a, 0x2c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2373,22 +2810,39 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type NotificationClient interface {
+	//Create notification
 	CreateNotification(ctx context.Context, in *CreateNotificationRequest, opts ...grpc.CallOption) (*CreateNotificationResponse, error)
+	//Describe notifications
 	DescribeNotifications(ctx context.Context, in *DescribeNotificationsRequest, opts ...grpc.CallOption) (*DescribeNotificationsResponse, error)
+	//Retry notifications
 	RetryNotifications(ctx context.Context, in *RetryNotificationsRequest, opts ...grpc.CallOption) (*RetryNotificationsResponse, error)
+	//Describe tasks
 	DescribeTasks(ctx context.Context, in *DescribeTasksRequest, opts ...grpc.CallOption) (*DescribeTasksResponse, error)
+	//Retry tasks
 	RetryTasks(ctx context.Context, in *RetryTasksRequest, opts ...grpc.CallOption) (*RetryTasksResponse, error)
+	//Create a recipient address
 	CreateAddress(ctx context.Context, in *CreateAddressRequest, opts ...grpc.CallOption) (*CreateAddressResponse, error)
+	//Query a list of addresses that meet the query criteria
 	DescribeAddresses(ctx context.Context, in *DescribeAddressesRequest, opts ...grpc.CallOption) (*DescribeAddressesResponse, error)
+	//Modify one address
 	ModifyAddress(ctx context.Context, in *ModifyAddressRequest, opts ...grpc.CallOption) (*ModifyAddressResponse, error)
+	//Delete a list of addresses
 	DeleteAddresses(ctx context.Context, in *DeleteAddressesRequest, opts ...grpc.CallOption) (*DeleteAddressesResponse, error)
+	//Create a list of addresses of the recipients.
 	CreateAddressList(ctx context.Context, in *CreateAddressListRequest, opts ...grpc.CallOption) (*CreateAddressListResponse, error)
+	//Query a list of address_lists that meet the query criteria
 	DescribeAddressList(ctx context.Context, in *DescribeAddressListRequest, opts ...grpc.CallOption) (*DescribeAddressListResponse, error)
+	//Modify one address list
 	ModifyAddressList(ctx context.Context, in *ModifyAddressListRequest, opts ...grpc.CallOption) (*ModifyAddressListResponse, error)
+	//Delete a list of addresslist
 	DeleteAddressList(ctx context.Context, in *DeleteAddressListRequest, opts ...grpc.CallOption) (*DeleteAddressListResponse, error)
+	//Set service configration
 	SetServiceConfig(ctx context.Context, in *ServiceConfig, opts ...grpc.CallOption) (*SetServiceConfigResponse, error)
+	//Get service configration
 	GetServiceConfig(ctx context.Context, in *GetServiceConfigRequest, opts ...grpc.CallOption) (*ServiceConfig, error)
+	//Validate email service
 	ValidateEmailService(ctx context.Context, in *ServiceConfig, opts ...grpc.CallOption) (*ValidateEmailServiceResponse, error)
+	CreateNotificationChannel(ctx context.Context, in *StreamReqData, opts ...grpc.CallOption) (Notification_CreateNotificationChannelClient, error)
 }
 
 type notificationClient struct {
@@ -2543,24 +2997,129 @@ func (c *notificationClient) ValidateEmailService(ctx context.Context, in *Servi
 	return out, nil
 }
 
+func (c *notificationClient) CreateNotificationChannel(ctx context.Context, in *StreamReqData, opts ...grpc.CallOption) (Notification_CreateNotificationChannelClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Notification_serviceDesc.Streams[0], "/pb.notification/CreateNotificationChannel", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &notificationCreateNotificationChannelClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Notification_CreateNotificationChannelClient interface {
+	Recv() (*StreamRespData, error)
+	grpc.ClientStream
+}
+
+type notificationCreateNotificationChannelClient struct {
+	grpc.ClientStream
+}
+
+func (x *notificationCreateNotificationChannelClient) Recv() (*StreamRespData, error) {
+	m := new(StreamRespData)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // NotificationServer is the server API for Notification service.
 type NotificationServer interface {
+	//Create notification
 	CreateNotification(context.Context, *CreateNotificationRequest) (*CreateNotificationResponse, error)
+	//Describe notifications
 	DescribeNotifications(context.Context, *DescribeNotificationsRequest) (*DescribeNotificationsResponse, error)
+	//Retry notifications
 	RetryNotifications(context.Context, *RetryNotificationsRequest) (*RetryNotificationsResponse, error)
+	//Describe tasks
 	DescribeTasks(context.Context, *DescribeTasksRequest) (*DescribeTasksResponse, error)
+	//Retry tasks
 	RetryTasks(context.Context, *RetryTasksRequest) (*RetryTasksResponse, error)
+	//Create a recipient address
 	CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressResponse, error)
+	//Query a list of addresses that meet the query criteria
 	DescribeAddresses(context.Context, *DescribeAddressesRequest) (*DescribeAddressesResponse, error)
+	//Modify one address
 	ModifyAddress(context.Context, *ModifyAddressRequest) (*ModifyAddressResponse, error)
+	//Delete a list of addresses
 	DeleteAddresses(context.Context, *DeleteAddressesRequest) (*DeleteAddressesResponse, error)
+	//Create a list of addresses of the recipients.
 	CreateAddressList(context.Context, *CreateAddressListRequest) (*CreateAddressListResponse, error)
+	//Query a list of address_lists that meet the query criteria
 	DescribeAddressList(context.Context, *DescribeAddressListRequest) (*DescribeAddressListResponse, error)
+	//Modify one address list
 	ModifyAddressList(context.Context, *ModifyAddressListRequest) (*ModifyAddressListResponse, error)
+	//Delete a list of addresslist
 	DeleteAddressList(context.Context, *DeleteAddressListRequest) (*DeleteAddressListResponse, error)
+	//Set service configration
 	SetServiceConfig(context.Context, *ServiceConfig) (*SetServiceConfigResponse, error)
+	//Get service configration
 	GetServiceConfig(context.Context, *GetServiceConfigRequest) (*ServiceConfig, error)
+	//Validate email service
 	ValidateEmailService(context.Context, *ServiceConfig) (*ValidateEmailServiceResponse, error)
+	CreateNotificationChannel(*StreamReqData, Notification_CreateNotificationChannelServer) error
+}
+
+// UnimplementedNotificationServer can be embedded to have forward compatible implementations.
+type UnimplementedNotificationServer struct {
+}
+
+func (*UnimplementedNotificationServer) CreateNotification(ctx context.Context, req *CreateNotificationRequest) (*CreateNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNotification not implemented")
+}
+func (*UnimplementedNotificationServer) DescribeNotifications(ctx context.Context, req *DescribeNotificationsRequest) (*DescribeNotificationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DescribeNotifications not implemented")
+}
+func (*UnimplementedNotificationServer) RetryNotifications(ctx context.Context, req *RetryNotificationsRequest) (*RetryNotificationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryNotifications not implemented")
+}
+func (*UnimplementedNotificationServer) DescribeTasks(ctx context.Context, req *DescribeTasksRequest) (*DescribeTasksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DescribeTasks not implemented")
+}
+func (*UnimplementedNotificationServer) RetryTasks(ctx context.Context, req *RetryTasksRequest) (*RetryTasksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetryTasks not implemented")
+}
+func (*UnimplementedNotificationServer) CreateAddress(ctx context.Context, req *CreateAddressRequest) (*CreateAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAddress not implemented")
+}
+func (*UnimplementedNotificationServer) DescribeAddresses(ctx context.Context, req *DescribeAddressesRequest) (*DescribeAddressesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DescribeAddresses not implemented")
+}
+func (*UnimplementedNotificationServer) ModifyAddress(ctx context.Context, req *ModifyAddressRequest) (*ModifyAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyAddress not implemented")
+}
+func (*UnimplementedNotificationServer) DeleteAddresses(ctx context.Context, req *DeleteAddressesRequest) (*DeleteAddressesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddresses not implemented")
+}
+func (*UnimplementedNotificationServer) CreateAddressList(ctx context.Context, req *CreateAddressListRequest) (*CreateAddressListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAddressList not implemented")
+}
+func (*UnimplementedNotificationServer) DescribeAddressList(ctx context.Context, req *DescribeAddressListRequest) (*DescribeAddressListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DescribeAddressList not implemented")
+}
+func (*UnimplementedNotificationServer) ModifyAddressList(ctx context.Context, req *ModifyAddressListRequest) (*ModifyAddressListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyAddressList not implemented")
+}
+func (*UnimplementedNotificationServer) DeleteAddressList(ctx context.Context, req *DeleteAddressListRequest) (*DeleteAddressListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAddressList not implemented")
+}
+func (*UnimplementedNotificationServer) SetServiceConfig(ctx context.Context, req *ServiceConfig) (*SetServiceConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetServiceConfig not implemented")
+}
+func (*UnimplementedNotificationServer) GetServiceConfig(ctx context.Context, req *GetServiceConfigRequest) (*ServiceConfig, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServiceConfig not implemented")
+}
+func (*UnimplementedNotificationServer) ValidateEmailService(ctx context.Context, req *ServiceConfig) (*ValidateEmailServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateEmailService not implemented")
+}
+func (*UnimplementedNotificationServer) CreateNotificationChannel(req *StreamReqData, srv Notification_CreateNotificationChannelServer) error {
+	return status.Errorf(codes.Unimplemented, "method CreateNotificationChannel not implemented")
 }
 
 func RegisterNotificationServer(s *grpc.Server, srv NotificationServer) {
@@ -2855,6 +3414,27 @@ func _Notification_ValidateEmailService_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Notification_CreateNotificationChannel_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamReqData)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NotificationServer).CreateNotificationChannel(m, &notificationCreateNotificationChannelServer{stream})
+}
+
+type Notification_CreateNotificationChannelServer interface {
+	Send(*StreamRespData) error
+	grpc.ServerStream
+}
+
+type notificationCreateNotificationChannelServer struct {
+	grpc.ServerStream
+}
+
+func (x *notificationCreateNotificationChannelServer) Send(m *StreamRespData) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _Notification_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.notification",
 	HandlerType: (*NotificationServer)(nil),
@@ -2924,6 +3504,12 @@ var _Notification_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Notification_ValidateEmailService_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateNotificationChannel",
+			Handler:       _Notification_CreateNotificationChannel_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "notification.proto",
 }

@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"strings"
 
-	"k8s.io/helm/pkg/tlsutil"
-	"k8s.io/helm/pkg/version"
+	"github.com/kubernetes/helm/pkg/tlsutil"
+	"github.com/kubernetes/helm/pkg/version"
 )
 
 //HttpGetter is the efault HTTP(/S) backend handler

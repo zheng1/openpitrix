@@ -16,7 +16,7 @@ import (
 	"openpitrix.io/openpitrix/pkg/devkit/opapp"
 )
 
-// Reference: vendor/k8s.io/helm/pkg/chartutil/save.go:97
+// Reference: vendor/github.com/kubernetes/helm/pkg/chartutil/save.go:97
 
 func Save(c *opapp.OpApp, outDir string) (string, error) {
 	// Create archive
